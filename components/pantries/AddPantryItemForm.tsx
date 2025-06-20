@@ -1,120 +1,121 @@
 // components/pantries/AddPantryItemForm.tsx
+import { useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { supabase } from '../../lib/supabaseClient';
+import Button from '../ui/Button';
+import Input from '../ui/Input';
+import Select from '../ui/Select';
+import Toast from '../ui/Toast';
 
-import { useState } from "react";
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
-import { showMessage } from "react-native-flash-message";
-import { supabase } from "../../lib/supabaseClient";
+const CATEGORIES = ['żywność', 'chemia', 'napoje', 'mrożonki', 'inne'];
+const UNITS = ['szt', 'kg'];
 
-const CATEGORIES = ["\u017cywno\u015b\u0107", "chemia", "napoje", "mro\u017conki", "inne"];
-const UNITS = ["szt", "kg"];
+type PantryItem = {
+    id: string;
+    name: string;
+    category: string;
+    quantity: number;
+    unit: string;
+    expiry_date?: string | null;
+};
 
 interface Props {
     pantryId: string;
-    onItemAdded: (item: {
-        id: string;
-        name: string;
-        category: string;
-        quantity: number;
-        unit: string;
-        expiry_date?: string | null;
-    }) => void;
+    onItemAdded: (item: PantryItem) => void;
 }
 
 export default function AddPantryItemForm({ pantryId, onItemAdded }: Props) {
-    const [name, setName] = useState("");
-    const [category, setCategory] = useState("");
-    const [quantity, setQuantity] = useState("");
-    const [unit, setUnit] = useState("");
-    const [expiryDate, setExpiryDate] = useState("");
+    const [name, setName] = useState('');
+    const [category, setCategory] = useState('');
+    const [quantity, setQuantity] = useState('1');
+    const [unit, setUnit] = useState('');
+    const [expiryDate, setExpiryDate] = useState('');
+    const [errors, setErrors] = useState<{ [key: string]: string }>({});
+    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+    const validate = () => {
+        const errs: { [key: string]: string } = {};
+        if (!name.trim()) errs.name = 'Nazwa produktu jest wymagana.';
+        if (!category) errs.category = 'Wybierz kategorię.';
+        if (!quantity || Number(quantity) <= 0) errs.quantity = 'Ilość musi być > 0.';
+        if (!unit) errs.unit = 'Wybierz jednostkę.';
+        setErrors(errs);
+        return Object.keys(errs).length === 0;
+    };
 
     const handleSubmit = async () => {
-        if (!name.trim() || !category || !quantity || !unit) {
-            showMessage({ message: "Wszystkie pola (oprócz daty) są wymagane", type: "danger" });
-            return;
-        }
-
-        const { data, error } = await supabase
-            .from("pantry_items")
-            .insert({
-                pantry_id: pantryId,
-                name: name.trim(),
-                category,
-                quantity: Number(quantity),
-                unit,
-                expiry_date: expiryDate || null,
-            })
-            .select()
-            .single();
-
-        if (error) {
-            console.error("B\u0142\u0105d dodawania produktu:", error.message);
-            showMessage({ message: error.message, type: "danger" });
-        } else {
-            onItemAdded(data);
-            setName("");
-            setCategory("");
-            setQuantity("");
-            setUnit("");
-            setExpiryDate("");
-            showMessage({ message: "Produkt dodany!", type: "success" });
+        if (!validate()) return;
+        try {
+            const { data, error } = await supabase
+                .from('pantry_items')
+                .insert({
+                    pantry_id: pantryId,
+                    name: name.trim(),
+                    category,
+                    quantity: Number(quantity),
+                    unit,
+                    expiry_date: expiryDate || null,
+                })
+                .select()
+                .single();
+            if (error || !data) throw error || new Error('Brak danych');
+            onItemAdded(data as PantryItem);
+            setName(''); setCategory(''); setQuantity('1'); setUnit(''); setExpiryDate('');
+            setToast({ message: 'Produkt dodany!', type: 'success' });
+        } catch (err: any) {
+            setToast({ message: err.message || 'Błąd dodawania produktu.', type: 'error' });
         }
     };
 
     return (
-        <View style={{ gap: 10 }}>
-            <TextInput
-                style={styles.input}
-                placeholder="Nazwa produktu"
+        <View style={styles.container}>
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+            <Input
+                label="Nazwa produktu"
                 value={name}
                 onChangeText={setName}
+                error={errors.name}
             />
-            <TextInput
-                style={styles.input}
-                placeholder="Kategoria (np. \u017cywno\u015b\u0107)"
+            <Select
+                label="Kategoria"
                 value={category}
-                onChangeText={setCategory}
+                options={CATEGORIES}
+                onChange={setCategory}
+                placeholder="Wybierz kategorię"
+                error={errors.category}
             />
-            <TextInput
-                style={styles.input}
-                placeholder="Ilo\u015b\u0107"
-                value={quantity}
-                onChangeText={setQuantity}
-                keyboardType="numeric"
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Jednostka (np. szt, kg)"
-                value={unit}
-                onChangeText={setUnit}
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Data przydatno\u015bci (opcjonalna)"
+            <View style={styles.row}>
+                <Input
+                    label="Ilość"
+                    keyboardType="numeric"
+                    value={quantity}
+                    onChangeText={setQuantity}
+                    error={errors.quantity}
+                />
+                <Select
+                    label="Jednostka"
+                    value={unit}
+                    options={UNITS}
+                    onChange={setUnit}
+                    placeholder="-- wybierz --"
+                    error={errors.unit}
+                />
+            </View>
+            <Input
+                label="Data przydatności"
+                placeholder="YYYY-MM-DD"
                 value={expiryDate}
                 onChangeText={setExpiryDate}
             />
-            <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-                <Text style={styles.buttonText}>➕ Dodaj produkt</Text>
-            </TouchableOpacity>
+            <Button onPress={handleSubmit} variant="confirm" style={styles.button}>
+                ➕ Dodaj produkt
+            </Button>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    input: {
-        borderWidth: 1,
-        borderColor: "#ccc",
-        borderRadius: 8,
-        padding: 10,
-    },
-    button: {
-        backgroundColor: "#10b981",
-        padding: 12,
-        borderRadius: 8,
-        alignItems: "center",
-    },
-    buttonText: {
-        color: "white",
-        fontWeight: "bold",
-    },
+    container: { gap: 12, marginVertical: 16 },
+    row: { flexDirection: 'row', gap: 12 },
+    button: { marginTop: 8 },
 });

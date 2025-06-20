@@ -1,103 +1,98 @@
 // components/ui/MemberList.tsx
-
-import { useEffect, useState } from "react";
-import {
-    FlatList,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
-} from "react-native";
-import { useFriendsStore } from "../../stores/friendsStore";
-
-interface Member {
-    id: string;
-    email: string;
-    role: string;
-}
+import { useEffect, useState } from 'react';
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Member, useFriendsStore } from '../../stores/friendsStore';
+import Accordion from './Accordion';
 
 interface Props {
-    members: Member[];
-    isOwner: boolean;
-    onInvite: (email: string) => void;
-    onRemove: (id: string) => void;
+    members: Member[];              // aktualnie wybrani współtwórcy
+    isOwner: boolean;               // możliwość dodawania/usuwania
+    onInvite: (id: string) => void; // dodaj do współtwórców (callback)
+    onRemove: (id: string) => void; // usuń z współtwórców (callback)
 }
 
 export default function MemberList({ members, isOwner, onInvite, onRemove }: Props) {
     const { friends, fetchFriends } = useFriendsStore();
-    const [selectedEmail, setSelectedEmail] = useState("");
+    const [expanded, setExpanded] = useState(false);
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
     useEffect(() => {
         fetchFriends();
+        // zainicjalizuj lokalny stan z przekazanych members
+        setSelectedIds(members.map(m => m.id));
     }, []);
 
-    const acceptedFriends = friends.filter((f) => f.status === "accepted");
+    // synchronizuj stan, jeśli prop members się zmienią
+    useEffect(() => {
+        setSelectedIds(members.map(m => m.id));
+    }, [members]);
 
-    const availableEmails = acceptedFriends
-        .map((f) => f.user_email)
-        .filter((email) => !members.some((m) => m.email === email));
+    const handleToggle = (id: string) => {
+        if (selectedIds.includes(id)) {
+            setSelectedIds(prev => prev.filter(x => x !== id));
+            onRemove(id);
+        } else {
+            setSelectedIds(prev => [...prev, id]);
+            onInvite(id);
+        }
+    };
+
+    const title = `Współtwórcy (${members.length})`;
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Współtwórcy</Text>
-
-            {isOwner && (
-                <View style={styles.inviteBox}>
-                    <Text style={styles.label}>Zaproś znajomego</Text>
+        <Accordion title={title} expanded={expanded} onToggle={() => setExpanded(prev => !prev)}>
+            <View style={styles.container}>
+                {friends.length === 0 ? (
+                    <Text style={styles.empty}>Brak znajomych</Text>
+                ) : (
                     <FlatList
-                        data={availableEmails}
-                        keyExtractor={(item) => item}
-                        renderItem={({ item }) => (
-                            <TouchableOpacity
-                                style={styles.selectItem}
-                                onPress={() => {
-                                    onInvite(item);
-                                    setSelectedEmail("");
-                                }}
-                            >
-                                <Text>{item}</Text>
-                            </TouchableOpacity>
-                        )}
+                        data={friends}
+                        keyExtractor={item => item.id}
+                        renderItem={({ item }) => {
+                            const selected = selectedIds.includes(item.id);
+                            return (
+                                <View style={styles.memberRow}>
+                                    <Text style={styles.email}>{item.user_email}</Text>
+                                    {isOwner && (
+                                        <TouchableOpacity
+                                            onPress={() => handleToggle(item.id)}
+                                            style={[styles.btn, selected ? styles.removeBtn : styles.addBtn]}
+                                        >
+                                            <Text style={selected ? styles.removeText : styles.addText}>
+                                                {selected ? 'Usuń' : 'Dodaj'}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
+                            );
+                        }}
                     />
-                </View>
-            )}
-
-            <View style={styles.memberList}>
-                {members.map((member) => (
-                    <View key={member.id} style={styles.memberRow}>
-                        <Text>{member.email}</Text>
-                        {isOwner && member.role !== "owner" && (
-                            <TouchableOpacity onPress={() => onRemove(member.id)}>
-                                <Text style={styles.removeText}>Usuń</Text>
-                            </TouchableOpacity>
-                        )}
-                    </View>
-                ))}
+                )}
             </View>
-        </View>
+        </Accordion>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { marginBottom: 16 },
-    title: { fontSize: 16, fontWeight: "bold", marginBottom: 8 },
-    inviteBox: { marginBottom: 12 },
-    label: { marginBottom: 4 },
-    selectItem: {
-        padding: 8,
-        backgroundColor: "#f3f4f6",
-        marginBottom: 4,
-        borderRadius: 6,
-    },
-    memberList: { gap: 8 },
+    container: { paddingVertical: 8 },
     memberRow: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        padding: 10,
-        borderWidth: 1,
-        borderColor: "#ccc",
-        borderRadius: 6,
-        marginBottom: 4,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 8,
+        borderBottomWidth: 1,
+        borderColor: '#eee',
     },
-    removeText: { color: "#ef4444" },
+    email: { fontSize: 16 },
+    btn: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 6 },
+    addBtn: { backgroundColor: '#10b981' },
+    removeBtn: { backgroundColor: '#ef4444' },
+    addText: { color: '#fff' },
+    removeText: { color: '#fff' },
+    empty: {
+        fontStyle: 'italic',
+        color: '#888',
+        textAlign: 'center',
+        marginVertical: 12,
+    },
 });

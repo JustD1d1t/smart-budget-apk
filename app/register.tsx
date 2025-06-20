@@ -1,118 +1,85 @@
-import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
-import {
-    ActivityIndicator,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-} from "react-native";
-import { showMessage } from "react-native-flash-message";
-import { supabase } from "../lib/supabaseClient";
-import { useUserStore } from "../stores/userStore";
+// app/register.tsx
+import { router } from 'expo-router';
+import { useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import Button from '../components/ui/Button';
+import Card from '../components/ui/Card';
+import Input from '../components/ui/Input';
 
-export default function Register() {
-    const router = useRouter();
-    const { user } = useUserStore();
-
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [loading, setLoading] = useState(false);
-
-    const showToast = (message: string, type: "success" | "danger" = "danger") => {
-        showMessage({
-            message,
-            type,
-            duration: 3000,
-            icon: type,
-        });
-    };
-
-    useEffect(() => {
-        if (user) {
-            router.replace("/");
-        }
-    }, [user]);
+export default function RegisterPage() {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [error, setError] = useState('');
 
     const handleRegister = async () => {
-        try {
-            setLoading(true);
-            const { error } = await supabase.auth.signUp({ email, password });
-            setLoading(false);
-
-            if (error) {
-                let msg = "Wystąpił błąd rejestracji";
-                if (error.message.includes("invalid email")) {
-                    msg = "Nieprawidłowy adres email";
-                } else if (error.message.includes("Password should be at least")) {
-                    msg = "Hasło musi mieć co najmniej 6 znaków";
-                } else if (error.message.includes("User already registered")) {
-                    msg = "Użytkownik już istnieje";
-                }
-                showToast(msg);
-            } else {
-                showToast("Rejestracja zakończona. Sprawdź email.", "success");
-                setTimeout(() => router.replace("/login"), 1500);
-            }
-        } catch {
-            setLoading(false);
-            showToast("Wystąpił błąd rejestracji");
+        setError('');
+        if (!email || !password || !confirmPassword) {
+            setError('Wypełnij wszystkie pola.');
+            return;
         }
+        if (password !== confirmPassword) {
+            setError('Hasła muszą być takie same.');
+            return;
+        }
+        // TODO: add register logic
+        router.replace('/');
     };
 
     return (
         <View style={styles.container}>
-            <Text style={styles.header}>Rejestracja</Text>
-
-            <TextInput
-                placeholder="Email"
-                value={email}
-                onChangeText={setEmail}
-                style={styles.input}
-                keyboardType="email-address"
-                autoCapitalize="none"
-            />
-            <TextInput
-                placeholder="Hasło"
-                value={password}
-                onChangeText={setPassword}
-                style={styles.input}
-                secureTextEntry
-            />
-
-            <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
-                {loading ? (
-                    <ActivityIndicator color="#fff" />
-                ) : (
-                    <Text style={styles.buttonText}>Zarejestruj się</Text>
-                )}
-            </TouchableOpacity>
-
-            <TouchableOpacity onPress={() => router.replace("/login")}>
-                <Text style={styles.link}>Masz już konto? Zaloguj się</Text>
-            </TouchableOpacity>
+            <Card style={styles.card}>
+                <Text style={styles.title}>Załóż konto</Text>
+                <Input
+                    label="Email"
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    error={!email && error ? 'Wymagany email' : ''}
+                />
+                <Input
+                    label="Hasło"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
+                    error={!password && error ? 'Wymagane hasło' : ''}
+                />
+                <Input
+                    label="Powtórz hasło"
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    secureTextEntry
+                    error={!confirmPassword && error ? 'Powtórz hasło' : ''}
+                />
+                {error && <Text style={styles.error}>{error}</Text>}
+                <Button onPress={handleRegister} variant="confirm">
+                    Zarejestruj się
+                </Button>
+            </Card>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, justifyContent: "center", padding: 20 },
-    header: { fontSize: 24, fontWeight: "bold", marginBottom: 20, textAlign: "center" },
-    input: {
-        borderWidth: 1,
-        borderColor: "#ccc",
-        padding: 12,
-        borderRadius: 8,
+    container: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#f0f0f0',
+        padding: 16,
+    },
+    card: {
+        width: '100%',
+        maxWidth: 400,
+    },
+    title: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 16,
+    },
+    error: {
+        color: '#e74c3c',
         marginBottom: 12,
     },
-    button: {
-        backgroundColor: "#10b981",
-        padding: 12,
-        borderRadius: 8,
-        alignItems: "center",
-        marginBottom: 12,
-    },
-    buttonText: { color: "#fff", fontWeight: "bold" },
-    link: { color: "#10b981", textAlign: "center", marginTop: 10 },
 });

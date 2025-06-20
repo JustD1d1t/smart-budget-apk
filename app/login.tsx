@@ -1,34 +1,28 @@
-import { useRouter } from "expo-router";
-import { useState } from "react";
-import {
-    ActivityIndicator,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-} from "react-native";
-import { showMessage } from "react-native-flash-message";
-import { supabase } from "../lib/supabaseClient";
-import { useUserStore } from "../stores/userStore";
+// app/login.tsx
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Button from '../components/ui/Button';
+import Card from '../components/ui/Card';
+import Input from '../components/ui/Input';
+import Toast from '../components/ui/Toast';
+import { supabase } from '../lib/supabaseClient';
+import { useUserStore } from '../stores/userStore';
 
-export default function Login() {
+export default function LoginPage() {
     const router = useRouter();
     const { setUser } = useUserStore();
 
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [resetEmail, setResetEmail] = useState("");
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [resetEmail, setResetEmail] = useState('');
     const [resetVisible, setResetVisible] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-    const showToast = (message: string, type: "success" | "danger" = "danger") => {
-        showMessage({
-            message,
-            type,
-            duration: 3000,
-            icon: type,
-        });
+    const showToast = (message: string, type: 'success' | 'error' = 'error') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 3000);
     };
 
     const handleLogin = async () => {
@@ -38,20 +32,20 @@ export default function Login() {
             setLoading(false);
 
             if (error) {
-                let msg = "Wystąpił błąd logowania";
-                if (error.message?.includes("Invalid login credentials")) {
-                    msg = "Nieprawidłowy email lub hasło";
-                } else if (error.message?.includes("Email not confirmed")) {
-                    msg = "Email nie został potwierdzony";
+                let msg = 'Wystąpił błąd logowania';
+                if (error.message?.includes('Invalid login credentials')) {
+                    msg = 'Nieprawidłowy email lub hasło';
+                } else if (error.message?.includes('Email not confirmed')) {
+                    msg = 'Email nie został potwierdzony';
                 }
                 showToast(msg);
             } else {
                 setUser(data.user, data.session);
-                router.replace("/");
+                router.replace('/');
             }
         } catch (err) {
             setLoading(false);
-            showToast("Wystąpił błąd logowania");
+            showToast('Wystąpił błąd logowania');
         }
     };
 
@@ -64,95 +58,72 @@ export default function Login() {
             setLoading(false);
 
             if (error) {
-                showToast("Błąd resetu hasła");
+                showToast('Błąd resetu hasła');
             } else {
-                showToast("Link do resetu wysłany!", "success");
+                showToast('Link do resetu wysłany!', 'success');
                 setResetVisible(false);
-                setResetEmail("");
+                setResetEmail('');
             }
         } catch {
             setLoading(false);
-            showToast("Wystąpił błąd przy resetowaniu hasła");
+            showToast('Wystąpił błąd przy resetowaniu hasła');
         }
     };
 
     return (
         <View style={styles.container}>
-            <Text style={styles.header}>Logowanie</Text>
+            {toast && <Toast message={toast.message} type={toast.type} />}
+            <Card style={styles.card}>
+                <Text style={styles.header}>Logowanie</Text>
+                <Input
+                    placeholder="Email"
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                />
+                <Input
+                    placeholder="Hasło"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
+                />
 
-            <TextInput
-                placeholder="Email"
-                value={email}
-                onChangeText={setEmail}
-                style={styles.input}
-                keyboardType="email-address"
-                autoCapitalize="none"
-            />
-            <TextInput
-                placeholder="Hasło"
-                value={password}
-                onChangeText={setPassword}
-                style={styles.input}
-                secureTextEntry
-            />
+                <Button onPress={handleLogin} variant="confirm" disabled={loading}>
+                    {loading ? <ActivityIndicator color="#fff" /> : 'Zaloguj się'}
+                </Button>
 
-            <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
-                {loading ? (
-                    <ActivityIndicator color="#fff" />
-                ) : (
-                    <Text style={styles.buttonText}>Zaloguj się</Text>
+                <TouchableOpacity onPress={() => setResetVisible((prev) => !prev)}>
+                    <Text style={styles.link}>Nie pamiętasz hasła?</Text>
+                </TouchableOpacity>
+
+                {resetVisible && (
+                    <View style={styles.resetBox}>
+                        <Input
+                            placeholder="Email do resetu"
+                            value={resetEmail}
+                            onChangeText={setResetEmail}
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                        />
+                        <Button onPress={handleReset} variant="neutral" disabled={loading}>
+                            {loading ? <ActivityIndicator color="#000" /> : 'Wyślij link resetujący'}
+                        </Button>
+                    </View>
                 )}
-            </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => setResetVisible((prev) => !prev)}>
-                <Text style={styles.link}>Nie pamiętasz hasła?</Text>
-            </TouchableOpacity>
-
-            {resetVisible && (
-                <View style={styles.resetBox}>
-                    <TextInput
-                        placeholder="Email do resetu"
-                        value={resetEmail}
-                        onChangeText={setResetEmail}
-                        style={styles.input}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                    />
-                    <TouchableOpacity style={styles.button} onPress={handleReset} disabled={loading}>
-                        {loading ? (
-                            <ActivityIndicator color="#fff" />
-                        ) : (
-                            <Text style={styles.buttonText}>Wyślij link resetujący</Text>
-                        )}
-                    </TouchableOpacity>
-                </View>
-            )}
-
-            <TouchableOpacity onPress={() => router.push("/register")}>
-                <Text style={styles.link}>Nie masz konta? Zarejestruj się</Text>
-            </TouchableOpacity>
+                <TouchableOpacity onPress={() => router.push('/register')}>
+                    <Text style={styles.link}>Nie masz konta? Zarejestruj się</Text>
+                </TouchableOpacity>
+            </Card>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, justifyContent: "center", padding: 20 },
-    header: { fontSize: 24, fontWeight: "bold", marginBottom: 20, textAlign: "center" },
-    input: {
-        borderWidth: 1,
-        borderColor: "#ccc",
-        padding: 12,
-        borderRadius: 8,
-        marginBottom: 12,
-    },
-    button: {
-        backgroundColor: "#3b82f6",
-        padding: 12,
-        borderRadius: 8,
-        alignItems: "center",
-        marginBottom: 12,
-    },
-    buttonText: { color: "#fff", fontWeight: "bold" },
-    link: { color: "#3b82f6", textAlign: "center", marginTop: 10 },
+    container: { flex: 1, justifyContent: 'center', padding: 20 },
+    card: { width: '100%', maxWidth: 400, alignSelf: 'center' },
+    header: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
+    link: { color: '#3b82f6', textAlign: 'center', marginTop: 10 },
     resetBox: { marginTop: 10 },
 });

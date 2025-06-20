@@ -1,17 +1,11 @@
-import { Picker } from "@react-native-picker/picker";
+// app/expenses/new.tsx
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import {
-    Alert,
-    Button,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
-} from "react-native";
+import { ScrollView, StyleSheet, Text } from "react-native";
+import Button from "../../components/ui/Button";
+import Input from "../../components/ui/Input";
 import MemberList from "../../components/ui/MemberList";
+import Select from "../../components/ui/Select";
 import { supabase } from "../../lib/supabaseClient";
 import { Member, useExpensesStore } from "../../stores/expensesStore";
 import { useUserStore } from "../../stores/userStore";
@@ -30,23 +24,17 @@ export default function ExpensesNewPage() {
     const [sharedWith, setSharedWith] = useState<Member[]>([]);
 
     const handleInvite = async (email: string) => {
-        const alreadyAdded = sharedWith.some((m) => m.email === email);
-        if (alreadyAdded) {
-            Alert.alert("Użytkownik już dodany.");
-            return;
+        if (sharedWith.some((m) => m.email === email)) {
+            return Alert.alert("Użytkownik już dodany.");
         }
-
         const { data: profile, error } = await supabase
             .from("profiles")
             .select("id, email")
             .eq("email", email)
             .maybeSingle();
-
         if (!profile || error) {
-            Alert.alert("Nie znaleziono użytkownika.");
-            return;
+            return Alert.alert("Nie znaleziono użytkownika.");
         }
-
         setSharedWith((prev) => [
             ...prev,
             { id: profile.id, email: profile.email, role: "viewer" },
@@ -57,48 +45,23 @@ export default function ExpensesNewPage() {
         setSharedWith((prev) => prev.filter((m) => m.id !== id));
     };
 
-    const validateForm = (): boolean => {
-        if (!amount || amount <= 0) {
-            Alert.alert("Kwota musi być większa od zera.");
-            return false;
-        }
-        if (!store.trim()) {
-            Alert.alert("Sklep nie może być pusty.");
-            return false;
-        }
-        const selectedDate = new Date(date);
-        const today = new Date();
-        today.setHours(23, 59, 59, 999);
-        if (selectedDate > today) {
-            Alert.alert("Data nie może być z przyszłości.");
-            return false;
-        }
-        if (!category) {
-            Alert.alert("Wybierz kategorię.");
-            return false;
-        }
+    const validateForm = () => {
+        if (amount <= 0) return Alert.alert("Kwota musi być większa od zera.");
+        if (!store.trim()) return Alert.alert("Sklep nie może być pusty.");
+        if (new Date(date) > new Date()) return Alert.alert("Data nie może być z przyszłości.");
+        if (!category) return Alert.alert("Wybierz kategorię.");
         return true;
     };
 
     const handleAdd = async () => {
         if (!validateForm() || !user?.id) return;
-
         const result = await addExpense(
-            {
-                amount,
-                store: store.trim(),
-                date,
-                category,
-                user_id: user.id,
-            },
+            { amount, store: store.trim(), date, category, user_id: user.id },
             sharedWith
         );
-
         if (!result.success) {
-            Alert.alert(result.error || "Błąd zapisu wydatku.");
-            return;
+            return Alert.alert(result.error || "Błąd zapisu wydatku.");
         }
-
         Alert.alert("Wydatek dodany!");
         router.push("/expenses");
     };
@@ -114,84 +77,41 @@ export default function ExpensesNewPage() {
                 onRemove={handleRemove}
             />
 
-            <Text style={styles.label}>Kwota (zł)</Text>
-            <TextInput
+            <Input
+                label="Kwota (zł)"
+                keyboardType="numeric"
                 value={amount.toString()}
                 onChangeText={(text) => setAmount(Number(text))}
-                keyboardType="numeric"
-                style={styles.input}
             />
 
-            <Text style={styles.label}>Sklep</Text>
-            <TextInput
+            <Input
+                label="Sklep"
                 value={store}
                 onChangeText={setStore}
-                style={styles.input}
             />
 
-            <Text style={styles.label}>Data</Text>
-            <TextInput
+            <Input
+                label="Data"
+                placeholder="YYYY-MM-DD"
                 value={date}
                 onChangeText={setDate}
-                placeholder="YYYY-MM-DD"
-                style={styles.input}
             />
 
-            <Text style={styles.label}>Kategoria</Text>
-            <View style={styles.pickerWrapper}>
-                <Picker
-                    selectedValue={category}
-                    onValueChange={(value) => setCategory(value)}
-                >
-                    <Picker.Item label="-- wybierz kategorię --" value="" />
-                    {CATEGORIES.map((cat) => (
-                        <Picker.Item key={cat} label={cat} value={cat} />
-                    ))}
-                </Picker>
-            </View>
+            <Select
+                label="Kategoria"
+                value={category}
+                options={CATEGORIES}
+                onChange={setCategory}
+            />
 
-            <View style={styles.buttonWrapper}>
-                <Button title="➕ Dodaj wydatek" onPress={handleAdd} />
-            </View>
+            <Button onPress={handleAdd} variant="confirm">
+                ➕ Dodaj wydatek
+            </Button>
         </ScrollView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        padding: 16,
-        gap: 16,
-    },
-    title: {
-        fontSize: 20,
-        fontWeight: "bold",
-        marginBottom: 8,
-    },
-    label: {
-        fontSize: 14,
-        fontWeight: "500",
-        marginBottom: 4,
-    },
-    input: {
-        borderWidth: 1,
-        borderColor: "#ccc",
-        borderRadius: 8,
-        padding: 10,
-        marginBottom: 12,
-    },
-    pickerWrapper: {
-        borderWidth: 1,
-        borderColor: "#ccc",
-        borderRadius: 8,
-        backgroundColor: "#f9f9f9",
-        marginBottom: 12,
-        ...Platform.select({
-            android: {
-                paddingHorizontal: 6,
-            },
-        }),
-    },
-    buttonWrapper: {
-        marginTop: 20,
-    },
+    container: { padding: 16, gap: 16 },
+    title: { fontSize: 20, fontWeight: "bold", marginBottom: 8 },
 });

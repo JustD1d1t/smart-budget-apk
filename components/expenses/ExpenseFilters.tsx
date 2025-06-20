@@ -1,7 +1,18 @@
-import { Picker } from "@react-native-picker/picker";
-import { StyleSheet, Text, TextInput, View } from "react-native";
+// components/expenses/ExpenseFilters.tsx
 
-const CATEGORIES = ["", "żywność", "samochód", "rozrywka", "chemia", "inne"];
+import { StyleSheet, View } from "react-native";
+import Input from "../ui/Input";
+import Select from "../ui/Select";
+
+const CATEGORY_OPTIONS = [
+    { label: "-- wszystkie --", value: "" },
+    { label: "Żywność", value: "żywność" },
+    { label: "Samochód", value: "samochód" },
+    { label: "Rozrywka", value: "rozrywka" },
+    { label: "Chemia", value: "chemia" },
+    { label: "Inne", value: "inne" },
+];
+
 const SORT_OPTIONS = [
     { label: "Kategoria (A-Z)", value: "category_asc" },
     { label: "Kategoria (Z-A)", value: "category_desc" },
@@ -34,49 +45,35 @@ export default function ExpenseFilters({
 }: Props) {
     return (
         <View style={styles.container}>
-            <View style={styles.field}>
-                <Text>Kategoria</Text>
-                <Picker
-                    selectedValue={filterCategory}
-                    onValueChange={onFilterCategoryChange}
-                >
-                    {CATEGORIES.map((cat) => (
-                        <Picker.Item key={cat} label={cat || "-- wszystkie --"} value={cat} />
-                    ))}
-                </Picker>
-            </View>
+            <Select
+                label="Kategoria"
+                value={filterCategory}
+                options={CATEGORY_OPTIONS.map((o) => o.value)}
+                onChange={onFilterCategoryChange}
+                placeholder="-- wszystkie --"
+            />
 
-            <View style={styles.field}>
-                <Text>Sortowanie</Text>
-                <Picker
-                    selectedValue={sortOption}
-                    onValueChange={onSortOptionChange}
-                >
-                    {SORT_OPTIONS.map((opt) => (
-                        <Picker.Item key={opt.value} label={opt.label} value={opt.value} />
-                    ))}
-                </Picker>
-            </View>
+            <Select
+                label="Sortowanie"
+                value={sortOption}
+                options={SORT_OPTIONS.map((o) => o.value)}
+                onChange={onSortOptionChange}
+                placeholder="Wybierz..."
+            />
 
-            <View style={styles.field}>
-                <Text>Data od</Text>
-                <TextInput
-                    style={styles.input}
-                    placeholder="YYYY-MM-DD"
-                    value={startDate}
-                    onChangeText={onStartDateChange}
-                />
-            </View>
+            <Input
+                label="Data od"
+                placeholder="YYYY-MM-DD"
+                value={startDate}
+                onChangeText={onStartDateChange}
+            />
 
-            <View style={styles.field}>
-                <Text>Data do</Text>
-                <TextInput
-                    style={styles.input}
-                    placeholder="YYYY-MM-DD"
-                    value={endDate}
-                    onChangeText={onEndDateChange}
-                />
-            </View>
+            <Input
+                label="Data do"
+                placeholder="YYYY-MM-DD"
+                value={endDate}
+                onChangeText={onEndDateChange}
+            />
         </View>
     );
 }
@@ -85,14 +82,6 @@ const styles = StyleSheet.create({
     container: {
         gap: 16,
         marginBottom: 16,
-    },
-    field: {
-        gap: 4,
-    },
-    input: {
-        borderWidth: 1,
-        borderColor: "#ccc",
-        padding: 10,
-        borderRadius: 6,
+        paddingHorizontal: 8,
     },
 });

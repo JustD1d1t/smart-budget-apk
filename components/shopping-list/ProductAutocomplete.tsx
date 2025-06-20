@@ -1,12 +1,14 @@
-import { useEffect, useState } from "react";
+// components/shopping-list/ProductAutocomplete.tsx
+import { useEffect, useState } from 'react';
 import {
     FlatList,
     StyleSheet,
     Text,
-    TextInput,
     TouchableOpacity,
     View,
-} from "react-native";
+} from 'react-native';
+import Card from '../ui/Card';
+import Input from '../ui/Input';
 
 type Product = {
     name: string;
@@ -32,7 +34,7 @@ export default function ProductAutocomplete({
     const [showSuggestions, setShowSuggestions] = useState(false);
 
     useEffect(() => {
-        const safeValue = value || "";
+        const safeValue = value || '';
 
         if (safeValue.length < 3) {
             setSuggestions([]);
@@ -51,7 +53,7 @@ export default function ProductAutocomplete({
         );
 
         if (filtered.length < 5 && !hasExactMatch) {
-            setSuggestions([{ name: safeValue, category: "inne" }, ...filtered]);
+            setSuggestions([{ name: safeValue, category: 'inne' }, ...filtered]);
         } else {
             setSuggestions(filtered);
         }
@@ -68,20 +70,20 @@ export default function ProductAutocomplete({
 
     return (
         <View style={styles.wrapper}>
-            <TextInput
-                style={[styles.input, error && styles.inputError]}
+            <Input
                 placeholder="Wpisz produkt..."
                 value={value}
                 onChangeText={(text) => {
                     onChange(text);
                     setShowSuggestions(true);
                 }}
+                error={error}
             />
-            {error && <Text style={styles.errorText}>{error}</Text>}
 
             {showSuggestions && suggestions.length > 0 && (
-                <View style={styles.dropdown}>
+                <Card style={styles.dropdown}>
                     <FlatList
+                        keyboardShouldPersistTaps="handled"
                         data={suggestions}
                         keyExtractor={(item, index) => item.name + index}
                         renderItem={({ item }) => (
@@ -90,13 +92,13 @@ export default function ProductAutocomplete({
                                 style={styles.suggestionItem}
                             >
                                 <Text style={styles.suggestionText}>
-                                    {item.name}{" "}
+                                    {item.name}{' '}
                                     <Text style={styles.categoryText}>({item.category})</Text>
                                 </Text>
                             </TouchableOpacity>
                         )}
                     />
-                </View>
+                </Card>
             )}
         </View>
     );
@@ -104,41 +106,12 @@ export default function ProductAutocomplete({
 
 const styles = StyleSheet.create({
     wrapper: {
-        width: "100%",
-        position: "relative",
+        width: '100%',
         zIndex: 10,
     },
-    input: {
-        borderWidth: 1,
-        borderColor: "#ccc",
-        borderRadius: 8,
-        padding: 10,
-        backgroundColor: "#fff",
-    },
-    inputError: {
-        borderColor: "#dc2626",
-    },
-    errorText: {
-        color: "#dc2626",
-        fontSize: 12,
-        marginTop: 4,
-    },
     dropdown: {
-        position: "absolute",
-        top: 50,
-        left: 0,
-        right: 0,
-        backgroundColor: "white",
-        borderColor: "#ccc",
-        borderWidth: 1,
-        borderRadius: 8,
-        maxHeight: 180,
         marginTop: 4,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 3,
-        elevation: 4,
+        maxHeight: 180,
     },
     suggestionItem: {
         paddingVertical: 8,
@@ -149,6 +122,6 @@ const styles = StyleSheet.create({
     },
     categoryText: {
         fontSize: 12,
-        color: "#6b7280",
+        color: '#6b7280',
     },
 });

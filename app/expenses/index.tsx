@@ -1,8 +1,8 @@
+// app/expenses/index.tsx
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
     ActivityIndicator,
-    Button,
     ScrollView,
     StyleSheet,
     Text,
@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import ExpenseFilters from "../../components/expenses/ExpenseFilters";
 import ExpenseItem from "../../components/expenses/ExpenseItem";
+import Button from "../../components/ui/Button";
 import { useExpensesStore } from "../../stores/expensesStore";
 import { useUserStore } from "../../stores/userStore";
 
@@ -87,8 +88,8 @@ export default function ExpensesListPage() {
         await deleteExpense(id, user.id);
     };
 
-    const handleEdit = (id: string) => {
-        router.push(`/expenses/edit/${id}`);
+    const handlePress = (id: string) => {
+        router.push(`/expenses/${id}`);
     };
 
     return (
@@ -123,8 +124,9 @@ export default function ExpensesListPage() {
                         <ExpenseItem
                             key={exp.id}
                             expense={exp}
-                            onEdit={exp.user_id === user?.id ? handleEdit : undefined}
-                            onDelete={exp.user_id === user?.id ? handleDelete : undefined}
+                            onPress={() => handlePress(exp.id)}
+                            onEdit={exp.user_id === user?.id ? () => handlePress(exp.id) : undefined}
+                            onDelete={exp.user_id === user?.id ? () => handleDelete(exp.id) : undefined}
                         />
                     ))}
 
@@ -134,26 +136,17 @@ export default function ExpensesListPage() {
                 </View>
             )}
 
-            <View style={styles.buttonWrapper}>
-                <Button title="➕ Dodaj nowy wydatek" onPress={() => router.push("/expenses/new")} />
-            </View>
+            <Button onPress={() => router.push("/expenses/new")} variant="confirm">
+                ➕ Dodaj nowy wydatek
+            </Button>
         </ScrollView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        padding: 16,
-        gap: 16,
-    },
-    title: {
-        fontSize: 20,
-        fontWeight: "bold",
-        marginBottom: 8,
-    },
-    list: {
-        gap: 8,
-    },
+    container: { padding: 16, gap: 16 },
+    title: { fontSize: 20, fontWeight: "bold" },
+    list: { gap: 8 },
     header: {
         flexDirection: "row",
         justifyContent: "space-between",
@@ -161,16 +154,6 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderColor: "#ccc",
     },
-    headerText: {
-        flex: 1,
-        fontWeight: "600",
-        fontSize: 12,
-    },
-    empty: {
-        color: "#888",
-        marginTop: 16,
-    },
-    buttonWrapper: {
-        marginTop: 20,
-    },
+    headerText: { flex: 1, fontWeight: "600", fontSize: 12 },
+    empty: { color: "#888" },
 });

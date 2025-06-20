@@ -1,93 +1,56 @@
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Expense } from '../../stores/expensesStore';
+import Button from '../ui/Button';
 
-interface Expense {
-    id: string;
-    store: string;
-    amount: number;
-    date: string;       // format YYYY-MM-DD
-    category: string;
-    user_id: string;
+interface Props {
+    expense: Expense;
+    onPress?: () => void;
+    onEdit?: () => void;
+    onDelete?: () => void;
 }
 
-type Props = {
-    expense: Expense;
-    onEdit?: (id: string) => void;
-    onDelete?: (id: string) => void;
-};
-
-export default function ExpenseItem({ expense, onEdit, onDelete }: Props) {
+export default function ExpenseItem({
+    expense,
+    onPress,
+    onEdit,
+    onDelete,
+}: Props) {
     return (
-        <View style={styles.container}>
+        <TouchableOpacity onPress={onPress} style={styles.container}>
             <View style={styles.row}>
-                <Text style={styles.text}>{expense.store}</Text>
+                <Text style={styles.store}>{expense.store}</Text>
                 <Text style={styles.amount}>{expense.amount.toFixed(2)} zł</Text>
-            </View>
-
-            <View style={styles.row}>
                 <Text style={styles.date}>{expense.date}</Text>
                 <Text style={styles.category}>{expense.category}</Text>
             </View>
-
-            {(onEdit || onDelete) && (
-                <View style={styles.actions}>
-                    {onEdit && (
-                        <TouchableOpacity onPress={() => onEdit(expense.id)} style={styles.button}>
-                            <Text style={styles.buttonText}>✏️ Edytuj</Text>
-                        </TouchableOpacity>
-                    )}
-                    {onDelete && (
-                        <TouchableOpacity onPress={() => onDelete(expense.id)} style={styles.button}>
-                            <Text style={styles.buttonText}>🗑 Usuń</Text>
-                        </TouchableOpacity>
-                    )}
-                </View>
-            )}
-        </View>
+            <View style={styles.actions}>
+                {onEdit && <Button onPress={onEdit}>✏️</Button>}
+                {onDelete && <Button onPress={onDelete} variant="danger">🗑️</Button>}
+            </View>
+        </TouchableOpacity>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
-        borderBottomWidth: 1,
-        borderBottomColor: "#e5e7eb",
-        paddingVertical: 12,
+        padding: 12,
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        marginBottom: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+        elevation: 2,
     },
     row: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        marginBottom: 4,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 8,
     },
-    text: {
-        fontSize: 14,
-        fontWeight: "500",
-    },
-    amount: {
-        fontSize: 14,
-        color: "#111827",
-    },
-    date: {
-        fontSize: 12,
-        color: "#6b7280",
-    },
-    category: {
-        fontSize: 12,
-        fontStyle: "italic",
-        color: "#9ca3af",
-    },
-    actions: {
-        flexDirection: "row",
-        justifyContent: "flex-end",
-        gap: 12,
-        marginTop: 8,
-    },
-    button: {
-        paddingHorizontal: 8,
-        paddingVertical: 6,
-        backgroundColor: "#e5e7eb",
-        borderRadius: 6,
-    },
-    buttonText: {
-        fontSize: 12,
-        color: "#111827",
-    },
+    store: { flex: 1, fontWeight: '500' },
+    amount: { width: 80, textAlign: 'right' },
+    date: { width: 80, textAlign: 'right' },
+    category: { width: 80, textAlign: 'right' },
+    actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },
 });

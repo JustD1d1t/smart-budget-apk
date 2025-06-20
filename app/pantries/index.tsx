@@ -1,33 +1,21 @@
 // app/pantries/index.tsx
-
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import {
-    ActivityIndicator,
-    FlatList,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-} from "react-native";
-import { showMessage } from "react-native-flash-message";
+import { ActivityIndicator, FlatList, StyleSheet, Text, View } from "react-native";
 import PantryItem from "../../components/pantries/PantryItem";
+import Button from "../../components/ui/Button";
+import Input from "../../components/ui/Input";
+import Toast from "../../components/ui/Toast";
 import { usePantriesStore } from "../../stores/pantriesStore";
 
 export default function PantryListPage() {
     const [newPantryName, setNewPantryName] = useState("");
     const [nameError, setNameError] = useState<string | null>(null);
+    const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
     const router = useRouter();
 
-    const {
-        pantries,
-        loading,
-        fetchPantries,
-        addPantry,
-        removePantry,
-        renamePantry,
-    } = usePantriesStore();
+    const { pantries, loading, fetchPantries, addPantry, removePantry, renamePantry } =
+        usePantriesStore();
 
     useEffect(() => {
         fetchPantries();
@@ -38,53 +26,60 @@ export default function PantryListPage() {
             setNameError("Nazwa nie może być pusta.");
             return;
         }
-
         setNameError(null);
-        const result = await addPantry(newPantryName);
 
+        const result = await addPantry(newPantryName.trim());
         if (!result.success) {
-            showMessage({
-                message: result.error || "Błąd podczas dodawania spiżarni.",
-                type: "danger",
-            });
+            setToast({ message: result.error || "Błąd podczas dodawania spiżarni.", type: "error" });
             return;
         }
 
         setNewPantryName("");
-        showMessage({ message: "Spiżarnia dodana pomyślnie!", type: "success" });
+        setToast({ message: "Spiżarnia dodana pomyślnie!", type: "success" });
     };
 
     const handleRemovePantry = async (id: string) => {
         await removePantry(id);
-        showMessage({ message: "Usunięto spiżarnię", type: "success" });
+        setToast({ message: "Usunięto spiżarnię", type: "success" });
     };
 
     const handleRenamePantry = async (id: string, newName: string) => {
-        if (!newName.trim()) return;
-        await renamePantry(id, newName);
-        showMessage({ message: "Zmieniono nazwę spiżarni", type: "success" });
+        if (!newName.trim()) {
+            setToast({ message: "Nazwa nie może być pusta.", type: "error" });
+            return;
+        }
+        await renamePantry(id, newName.trim());
+        setToast({ message: "Zmieniono nazwę spiżarni", type: "success" });
     };
 
     return (
         <View style={styles.container}>
             <Text style={styles.title}>📦 Twoje spiżarnie</Text>
 
-            <TextInput
-                style={[styles.input, nameError ? styles.inputError : null]}
-                placeholder="Nazwa spiżarni"
+            {toast && (
+                <Toast
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={() => setToast(null)}
+                />
+            )}
+
+            <Input
+                label="Nazwa spiżarni"
+                placeholder="np. Spiżarnia domowa"
                 value={newPantryName}
                 onChangeText={setNewPantryName}
+                error={nameError || undefined}
             />
-            {nameError && <Text style={styles.errorText}>{nameError}</Text>}
 
-            <TouchableOpacity style={styles.addButton} onPress={handleAddPantry}>
-                <Text style={styles.addButtonText}>Dodaj spiżarnię</Text>
-            </TouchableOpacity>
+            <Button onPress={handleAddPantry} variant="confirm" style={styles.addBtn}>
+                Dodaj spiżarnię
+            </Button>
 
             {loading ? (
-                <ActivityIndicator />
+                <ActivityIndicator style={styles.loader} />
             ) : pantries.length === 0 ? (
-                <Text>Brak spiżarni.</Text>
+                <Text style={styles.empty}>Brak spiżarni.</Text>
             ) : (
                 <FlatList
                     data={pantries}
@@ -92,11 +87,12 @@ export default function PantryListPage() {
                     renderItem={({ item }) => (
                         <PantryItem
                             pantry={item}
-                            onOpen={(id) => router.push(`/pantries/${id}`)}
+                            onOpen={() => router.push(`/pantries/${item.id}`)}
                             onRemove={item.isOwner ? handleRemovePantry : undefined}
-                            onRename={item.isOwner ? handleRenamePantry : undefined}
+                            onRename={item.isOwner ? (newName) => handleRenamePantry(item.id, newName) : undefined}
                         />
                     )}
+                    contentContainerStyle={styles.list}
                 />
             )}
         </View>
@@ -104,31 +100,10 @@ export default function PantryListPage() {
 }
 
 const styles = StyleSheet.create({
-    container: { padding: 20 },
+    container: { flex: 1, gap: 12, padding: 20, backgroundColor: "#fff" },
     title: { fontSize: 20, fontWeight: "bold", marginBottom: 16 },
-    input: {
-        borderWidth: 1,
-        borderColor: "#ccc",
-        borderRadius: 8,
-        padding: 10,
-        marginBottom: 8,
-    },
-    inputError: {
-        borderColor: "#ef4444",
-    },
-    errorText: {
-        color: "#ef4444",
-        marginBottom: 8,
-    },
-    addButton: {
-        backgroundColor: "#10b981",
-        padding: 12,
-        borderRadius: 8,
-        alignItems: "center",
-        marginBottom: 20,
-    },
-    addButtonText: {
-        color: "white",
-        fontWeight: "bold",
-    },
+    addBtn: { marginBottom: 20 },
+    loader: { marginTop: 20 },
+    empty: { textAlign: "center", color: "#888", marginTop: 20 },
+    list: { paddingBottom: 20 },
 });

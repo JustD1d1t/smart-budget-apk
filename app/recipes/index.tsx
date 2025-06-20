@@ -1,29 +1,24 @@
+// app/recipes/index.tsx
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import {
-  Alert,
-  Button,
-  FlatList,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Alert, FlatList, StyleSheet, Text, View } from "react-native";
+import Button from "../../components/ui/Button";
 import ShoppingListSelectModal from "../../components/ui/ShoppingListSelectModal";
 import { supabase } from "../../lib/supabaseClient";
 import { useUserStore } from "../../stores/userStore";
 
-type Ingredient = {
+interface Ingredient {
   name: string;
   quantity: number;
   unit: string;
-};
+}
 
-type Recipe = {
+interface Recipe {
   id: string;
   name: string;
   description?: string;
   ingredients: Ingredient[];
-};
+}
 
 export default function RecipesListPage() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -101,7 +96,9 @@ export default function RecipesListPage() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>📖 Przepisy</Text>
-        <Button title="➕ Dodaj przepis" onPress={() => router.push("/recipes/new")} />
+        <Button onPress={() => router.push("/recipes/new")}>
+          ➕ Dodaj przepis
+        </Button>
       </View>
 
       {recipes.length === 0 ? (
@@ -119,12 +116,15 @@ export default function RecipesListPage() {
               ) : null}
 
               <View style={styles.actions}>
-                <Button title="➕ Dodaj do listy" onPress={() => handleAddToShoppingList(recipe)} />
-                <Button title="🗑️ Usuń" onPress={() => deleteRecipe(recipe.id)} />
-                <Button
-                  title="📖 Otwórz przepis"
-                  onPress={() => router.push(`/recipes/${recipe.id}`)}
-                />
+                <Button onPress={() => handleAddToShoppingList(recipe)}>
+                  ➕ Dodaj do listy
+                </Button>
+                <Button onPress={() => deleteRecipe(recipe.id)}>
+                  🗑️ Usuń
+                </Button>
+                <Button onPress={() => router.push(`/recipes/${recipe.id}`)}>
+                  📖 Otwórz przepis
+                </Button>
               </View>
             </View>
           )}

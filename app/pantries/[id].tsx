@@ -1,30 +1,24 @@
 // app/pantries/[id].tsx
-
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import {
-    ActivityIndicator,
-    Picker,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
-} from "react-native";
-import { showMessage } from "react-native-flash-message";
+import { ActivityIndicator, ScrollView, StyleSheet, Text } from "react-native";
 import AddPantryItemForm from "../../components/pantries/AddPantryItemForm";
 import EditPantryItemModal from "../../components/pantries/EditPantryItemModal";
 import GroupedItemList from "../../components/pantries/GroupedItemList";
 import ItemList from "../../components/pantries/ItemList";
+import Accordion from "../../components/ui/Accordion";
 import MemberList from "../../components/ui/MemberList";
+import Select from "../../components/ui/Select";
+import Toast from "../../components/ui/Toast";
 import { usePantriesStore } from "../../stores/pantriesStore";
 
 export default function PantryDetailsPage() {
-    const { id } = useLocalSearchParams();
-    const [editingItem, setEditingItem] = useState(null);
+    const { id } = useLocalSearchParams<{ id: string }>();
+    const [editingItem, setEditingItem] = useState<any>(null);
     const [filterCategory, setFilterCategory] = useState("all");
-    const [sortBy, setSortBy] = useState("name");
+    const [sortBy, setSortBy] = useState<"name" | "category" | "expiry_date">("name");
     const [groupedView, setGroupedView] = useState(false);
+    const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
     const {
         selectedPantry,
@@ -65,14 +59,14 @@ export default function PantryDetailsPage() {
         await updateItemQuantity(itemId, newQuantity);
     };
 
-    const handleInvite = async (email: string) => {
-        const result = await inviteMember(id, email);
-        showMessage({ message: result.message, type: result.success ? "success" : "danger" });
+    const handleInvite = async (memberId: string) => {
+        const result = await inviteMember(id as string, memberId);
+        setToast({ message: result.message, type: result.success ? "success" : "error" });
     };
 
     const handleRemove = async (memberId: string) => {
-        await removeMember(memberId);
-        showMessage({ message: "Użytkownik usunięty.", type: "success" });
+        await removeMember(id as string, memberId);
+        setToast({ message: "Użytkownik usunięty.", type: "success" });
     };
 
     const filteredItems = pantryItems
@@ -88,54 +82,53 @@ export default function PantryDetailsPage() {
             return 0;
         });
 
-    const categories = [...new Set(pantryItems.map((item) => item.category))];
+    const categories = ["all", ...new Set(pantryItems.map((item) => item.category))];
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
             <Text style={styles.title}>📦 Szczegóły spiżarni: {selectedPantry?.name || ""}</Text>
 
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
             {isOwner && (
                 <MemberList
-                    isOwner={true}
+                    isOwner
                     members={pantryMembers}
                     onInvite={handleInvite}
                     onRemove={handleRemove}
                 />
             )}
 
-            <AddPantryItemForm pantryId={id as string} onItemAdded={() => fetchPantryItems(id)} />
+            <AddPantryItemForm pantryId={id as string} onItemAdded={() => fetchPantryItems(id as string)} />
 
-            <View style={styles.controls}>
-                <TouchableOpacity onPress={() => setGroupedView(!groupedView)} style={styles.switchButton}>
-                    <Text>{groupedView ? "Pokaż jako listę" : "Pogrupuj po kategoriach"}</Text>
-                </TouchableOpacity>
+            <Accordion
+                title={groupedView ? "Pokaż jako listę" : "Pogrupuj po kategoriach"}
+                expanded
+                onToggle={() => setGroupedView(!groupedView)}
+            />
 
-                <Picker selectedValue={filterCategory} onValueChange={(v) => setFilterCategory(v)} style={styles.picker}>
-                    <Picker.Item label="Wszystkie kategorie" value="all" />
-                    {categories.map((cat) => (
-                        <Picker.Item key={cat} label={cat} value={cat} />
-                    ))}
-                </Picker>
+            <Select
+                label="Kategoria"
+                value={filterCategory}
+                options={categories}
+                onChange={setFilterCategory}
+            />
 
-                {!groupedView && (
-                    <Picker selectedValue={sortBy} onValueChange={(v) => setSortBy(v)} style={styles.picker}>
-                        <Picker.Item label="Sortuj alfabetycznie" value="name" />
-                        <Picker.Item label="Sortuj po kategorii" value="category" />
-                        <Picker.Item label="Sortuj po dacie przydatności" value="expiry_date" />
-                    </Picker>
-                )}
-            </View>
+            {!groupedView && (
+                <Select
+                    label="Sortuj po"
+                    value={sortBy}
+                    options={["name", "category", "expiry_date"]}
+                    onChange={setSortBy}
+                />
+            )}
 
             {loading ? (
-                <ActivityIndicator />
+                <ActivityIndicator style={styles.loader} />
             ) : filteredItems.length === 0 ? (
-                <Text>Brak produktów</Text>
+                <Text style={styles.empty}>Brak produktów</Text>
             ) : groupedView ? (
-                <GroupedItemList
-                    items={filteredItems}
-                    onEdit={setEditingItem}
-                    onDelete={handleDeleteItem}
-                />
+                <GroupedItemList items={filteredItems} onEdit={setEditingItem} onDelete={handleDeleteItem} />
             ) : (
                 <ItemList
                     items={filteredItems}
@@ -160,17 +153,6 @@ export default function PantryDetailsPage() {
 const styles = StyleSheet.create({
     container: { padding: 20 },
     title: { fontSize: 20, fontWeight: "bold", marginBottom: 16 },
-    controls: { gap: 12, marginVertical: 12 },
-    switchButton: {
-        backgroundColor: "#e5e7eb",
-        padding: 10,
-        borderRadius: 8,
-        alignItems: "center",
-    },
-    picker: {
-        borderWidth: 1,
-        borderColor: "#ccc",
-        borderRadius: 8,
-        backgroundColor: "#fff",
-    },
+    loader: { marginVertical: 20 },
+    empty: { textAlign: "center", color: "#888", marginVertical: 20 },
 });

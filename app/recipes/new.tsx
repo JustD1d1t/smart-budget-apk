@@ -1,29 +1,25 @@
+// app/recipes/new.tsx
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import {
-  Alert,
-  Button,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Alert, ScrollView, StyleSheet, Text } from "react-native";
 import IngredientListEditor from "../../components/recipes/IngredientListEditor";
+import Button from "../../components/ui/Button";
+import Input from "../../components/ui/Input";
+import Textarea from "../../components/ui/Textarea";
 import { supabase } from "../../lib/supabaseClient";
 import { useUserStore } from "../../stores/userStore";
 
-type Ingredient = {
+interface Ingredient {
   name: string;
   quantity: number;
   unit: string;
-};
+}
 
-type IngredientError = {
+interface IngredientError {
   name?: string;
   quantity?: string;
   unit?: string;
-};
+}
 
 export default function NewRecipePage() {
   const { user } = useUserStore();
@@ -34,14 +30,11 @@ export default function NewRecipePage() {
   const [ingredients, setIngredients] = useState<Ingredient[]>([
     { name: "", quantity: 1, unit: "" },
   ]);
-
-  const [errors, setErrors] = useState<{
-    name?: string;
-    description?: string;
-    ingredients?: string;
-    ingredientFields: IngredientError[];
-  }>({
-    ingredientFields: [],
+  const [errors, setErrors] = useState({
+    name: undefined,
+    description: undefined,
+    ingredients: undefined,
+    ingredientFields: [] as IngredientError[],
   });
 
   const handleAddIngredient = () => {
@@ -66,31 +59,20 @@ export default function NewRecipePage() {
       ingredientFields: [] as IngredientError[],
     };
 
-    if (!trimmedName) {
-      newErrors.name = "Nazwa przepisu jest wymagana.";
-    }
-
-    if (trimmedDescription.length < 50) {
+    if (!trimmedName) newErrors.name = "Nazwa przepisu jest wymagana.";
+    if (trimmedDescription.length < 50)
       newErrors.description = "Opis musi zawierać co najmniej 50 znaków.";
-    }
-
-    if (validIngredients.length < 2) {
+    if (validIngredients.length < 2)
       newErrors.ingredients = "Podaj co najmniej 2 składniki z nazwą.";
-    }
 
     ingredients.forEach((i, index) => {
       const err: IngredientError = {};
       if (i.name.trim() !== "") {
-        if (isNaN(i.quantity) || i.quantity <= 0) {
-          err.quantity = "Podaj poprawną ilość (> 0)";
-        }
-        if (!i.unit.trim()) {
-          err.unit = "Wybierz jednostkę";
-        }
+        if (isNaN(i.quantity) || i.quantity <= 0) err.quantity = "Podaj poprawną ilość (> 0)";
+        if (!i.unit.trim()) err.unit = "Wybierz jednostkę";
       }
       ingredientErrors[index] = err;
     });
-
     newErrors.ingredientFields = ingredientErrors;
 
     const hasErrors =
@@ -128,25 +110,20 @@ export default function NewRecipePage() {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>➕ Nowy przepis</Text>
 
-      <TextInput
+      <Input
         placeholder="Nazwa przepisu"
         value={name}
         onChangeText={setName}
-        style={[styles.input, errors.name && styles.errorInput]}
+        error={errors.name}
       />
-      {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
 
-      <TextInput
+      <Textarea
         placeholder="Opis (min. 50 znaków)"
         value={description}
         onChangeText={setDescription}
-        multiline
         numberOfLines={4}
-        style={[styles.textarea, errors.description && styles.errorInput]}
+        error={errors.description}
       />
-      {errors.description && (
-        <Text style={styles.errorText}>{errors.description}</Text>
-      )}
 
       <Text style={styles.sectionTitle}>Składniki</Text>
 
@@ -156,17 +133,10 @@ export default function NewRecipePage() {
         errors={errors.ingredientFields}
       />
 
-      {errors.ingredients && (
-        <Text style={styles.errorText}>{errors.ingredients}</Text>
-      )}
+      {errors.ingredients && <Text style={styles.errorText}>{errors.ingredients}</Text>}
 
-      <View style={styles.buttonWrapper}>
-        <Button title="➕ Dodaj składnik" onPress={handleAddIngredient} />
-      </View>
-
-      <View style={styles.buttonWrapper}>
-        <Button title="✅ Zapisz przepis" onPress={handleSubmit} />
-      </View>
+      <Button onPress={handleAddIngredient}>➕ Dodaj składnik</Button>
+      <Button onPress={handleSubmit}>✅ Zapisz przepis</Button>
     </ScrollView>
   );
 }
@@ -174,42 +144,18 @@ export default function NewRecipePage() {
 const styles = StyleSheet.create({
   container: {
     padding: 16,
-    gap: 12,
+    gap: 4,
   },
   title: {
     fontSize: 22,
     fontWeight: "bold",
-    marginBottom: 12,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: "600",
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 10,
-  },
-  textarea: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 10,
-    minHeight: 100,
-    textAlignVertical: "top",
-  },
-  errorInput: {
-    borderColor: "#dc2626",
   },
   errorText: {
     color: "#dc2626",
     fontSize: 12,
-    marginBottom: 4,
-  },
-  buttonWrapper: {
-    marginTop: 16,
   },
 });

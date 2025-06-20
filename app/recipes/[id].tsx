@@ -1,27 +1,28 @@
+// app/recipes/[id].tsx
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
     ActivityIndicator,
-    Button,
     FlatList,
     StyleSheet,
     Text,
     View,
 } from "react-native";
+import Button from "../../components/ui/Button";
 import { supabase } from "../../lib/supabaseClient";
 
-type Ingredient = {
+interface Ingredient {
     name: string;
     quantity: number;
     unit: string;
-};
+}
 
-type Recipe = {
+interface Recipe {
     id: string;
     name: string;
     description?: string;
     ingredients: Ingredient[];
-};
+}
 
 export default function RecipeDetailsPage() {
     const { id } = useLocalSearchParams();
@@ -64,7 +65,7 @@ export default function RecipeDetailsPage() {
         return (
             <View style={styles.center}>
                 <Text style={styles.empty}>Nie znaleziono przepisu.</Text>
-                <Button title="⬅️ Wróć" onPress={() => router.back()} />
+                <Button onPress={() => router.back()}>⬅️ Wróć</Button>
             </View>
         );
     }
@@ -89,7 +90,7 @@ export default function RecipeDetailsPage() {
             />
 
             <View style={styles.buttonWrapper}>
-                <Button title="⬅️ Wróć" onPress={() => router.back()} />
+                <Button onPress={() => router.back()}>⬅️ Wróć</Button>
             </View>
         </View>
     );

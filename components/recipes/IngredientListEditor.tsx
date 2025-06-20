@@ -1,13 +1,14 @@
-import { ScrollView, StyleSheet } from "react-native";
+// components/recipes/IngredientListEditor.tsx
+import { StyleSheet, View } from "react-native";
 import { productsDb } from "../../data/productsDb";
 import { flattenProductsDb } from "../../utils/flattenProductsDb";
 import IngredientFormRow, { Ingredient, IngredientError } from "./IngredientFormRow";
 
-type Props = {
+interface Props {
     ingredients: Ingredient[];
     setIngredients: (items: Ingredient[]) => void;
     errors?: IngredientError[];
-};
+}
 
 export default function IngredientListEditor({
     ingredients,
@@ -28,7 +29,7 @@ export default function IngredientListEditor({
     };
 
     return (
-        <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.container}>
             {ingredients.map((ingredient, index) => (
                 <IngredientFormRow
                     key={index}
@@ -40,7 +41,7 @@ export default function IngredientListEditor({
                     productsDb={flattenedProducts}
                 />
             ))}
-        </ScrollView>
+        </View>
     );
 }
 

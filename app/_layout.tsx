@@ -1,7 +1,9 @@
-import { Stack, useRouter } from "expo-router";
-import { Button } from "react-native";
-import FlashMessage from "react-native-flash-message";
-import { useUserStore } from "../stores/userStore";
+// app/_layout.tsx
+import { Stack, useRouter } from 'expo-router';
+import { StyleSheet, View } from 'react-native';
+import Button from '../components/ui/Button';
+import { useUserStore } from '../stores/userStore';
+// import FlashMessage from 'react-native-flash-message';
 
 export default function Layout() {
   const router = useRouter();
@@ -13,17 +15,27 @@ export default function Layout() {
         screenOptions={{
           headerRight: () =>
             user ? (
-              <Button
-                title="Wyloguj"
-                onPress={async () => {
-                  await logout();
-                  router.replace("/login");
-                }}
-              />
+              <View style={styles.headerButtonWrapper}>
+                <Button
+                  variant="danger"
+                  onPress={async () => {
+                    await logout();
+                    router.replace('/login');
+                  }}
+                >
+                  Wyloguj
+                </Button>
+              </View>
             ) : null,
         }}
       />
-      <FlashMessage position="top" /> {/* ← TO DODAJ */}
+      {/* <FlashMessage position="top" /> */}
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  headerButtonWrapper: {
+    marginRight: 12,
+  },
+});
