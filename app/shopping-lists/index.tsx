@@ -2,121 +2,93 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
-    Alert,
-    FlatList,
-    StyleSheet,
-    Text,
-    View,
+  FlatList,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import Input from '../../components/ui/Input';
-import { supabase } from '../../lib/supabaseClient';
-
-type ShoppingList = {
-  id: string;
-  name: string;
-  isOwner: boolean;
-};
+import Toast from '../../components/ui/Toast';
+import { useShoppingListStore } from '../../stores/shoppingListStore';
 
 export default function ShoppingListsPage() {
-  const [lists, setLists] = useState<ShoppingList[]>([]);
+  const router = useRouter();
+  const { lists, fetchLists, addList, removeList, renameList } =
+    useShoppingListStore();
+
   const [loading, setLoading] = useState(true);
   const [newListName, setNewListName] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
-  const router = useRouter();
 
-  const fetchLists = async () => {
+  const [toastData, setToastData] = useState<{
+    message: string;
+    type: 'success' | 'error';
+  } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error') => {
+    setToastData({ message, type });
+    setTimeout(() => setToastData(null), 3000);
+  };
+
+  const reload = async () => {
     setLoading(true);
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData.user?.id;
-
-    const { data: listData, error } = await supabase
-      .from('shopping_lists')
-      .select('id, name, owner_id');
-
-    if (error) {
-      Alert.alert('Błąd', 'Nie udało się pobrać list');
-    } else {
-      const withOwnership = listData.map((list) => ({
-        id: list.id,
-        name: list.name,
-        isOwner: list.owner_id === userId,
-      }));
-      setLists(withOwnership);
-    }
-
+    const { success, error } = await fetchLists();
     setLoading(false);
+
+    if (!success) {
+      showToast(`Błąd, ${error}` || 'Nie udało się pobrać list', 'error');
+    }
   };
 
   useEffect(() => {
-    fetchLists();
+    reload();
   }, []);
 
   const handleAddList = async () => {
     if (!newListName.trim()) {
-      Alert.alert('Błąd', 'Nazwa nie może być pusta.');
+      showToast('Nazwa nie może być pusta.', 'error');
       return;
     }
-
-    const { data: userData, error: userError } = await supabase.auth.getUser();
-    const userId = userData?.user?.id;
-
-    if (!userId || userError) {
-      Alert.alert('Błąd', 'Nie udało się pobrać użytkownika.');
-      return;
+    const { success, error } = await addList(newListName.trim());
+    if (success) {
+      showToast('Lista dodana.', 'success');
+      setNewListName('');
+      await fetchLists();
+    } else {
+      showToast(error || 'Nie udało się dodać listy.', 'error');
     }
-
-    const { data: listData, error: listError } = await supabase
-      .from('shopping_lists')
-      .insert({ name: newListName, owner_id: userId })
-      .select()
-      .single();
-
-    if (listError || !listData) {
-      Alert.alert('Błąd', 'Nie udało się dodać listy.');
-      return;
-    }
-
-    await supabase
-      .from('shopping_list_members')
-      .insert({ list_id: listData.id, user_id: userId, role: 'owner' });
-
-    setNewListName('');
-    await fetchLists();
-    Alert.alert('Sukces', 'Lista dodana.');
   };
 
   const handleRemoveList = async (id: string) => {
-    const { error } = await supabase.from('shopping_lists').delete().eq('id', id);
-    if (!error) {
-      setLists((prev) => prev.filter((list) => list.id !== id));
-      Alert.alert('Usunięto', 'Lista została usunięta.');
+    const { success, error } = await removeList(id);
+    if (success) {
+      showToast('Lista usunięta.', 'success');
     } else {
-      Alert.alert('Błąd', 'Nie udało się usunąć listy.');
+      showToast(error || 'Nie udało się usunąć listy.', 'error');
     }
   };
 
-  const handleEditClick = (list: ShoppingList) => {
-    setEditingId(list.id);
-    setEditingName(list.name);
+  const startEditing = (id: string, name: string) => {
+    setEditingId(id);
+    setEditingName(name);
   };
 
-  const handleRenameList = async (id: string) => {
-    if (!editingName.trim()) return;
-    const { error } = await supabase
-      .from('shopping_lists')
-      .update({ name: editingName })
-      .eq('id', id);
-
-    if (!error) {
-      Alert.alert('Sukces', 'Zmieniono nazwę listy.');
+  const handleRename = async (id: string) => {
+    if (!editingName.trim()) {
+      showToast('Nazwa nie może być pusta.', 'error');
+      return;
+    }
+    const { success, error } = await renameList(id, editingName.trim());
+    if (success) {
+      showToast('Zmieniono nazwę listy.', 'success');
       setEditingId(null);
       setEditingName('');
-      fetchLists();
+      await fetchLists();
     } else {
-      Alert.alert('Błąd', 'Nie udało się zmienić nazwy.');
+      showToast(error || 'Nie udało się zmienić nazwy.', 'error');
     }
   };
 
@@ -126,7 +98,7 @@ export default function ShoppingListsPage() {
 
       <View style={styles.form}>
         <Input
-          placeholder="Nazwa listy"
+          placeholder="Nazwa nowej listy"
           value={newListName}
           onChangeText={setNewListName}
         />
@@ -146,12 +118,21 @@ export default function ShoppingListsPage() {
             <Card>
               {editingId === item.id ? (
                 <>
-                  <Input value={editingName} onChangeText={setEditingName} />
+                  <Input
+                    value={editingName}
+                    onChangeText={setEditingName}
+                  />
                   <View style={styles.row}>
-                    <Button onPress={() => handleRenameList(item.id)} variant="confirm">
+                    <Button
+                      onPress={() => handleRename(item.id)}
+                      variant="confirm"
+                    >
                       Zapisz
                     </Button>
-                    <Button onPress={() => setEditingId(null)} variant="neutral">
+                    <Button
+                      onPress={() => setEditingId(null)}
+                      variant="neutral"
+                    >
                       Anuluj
                     </Button>
                   </View>
@@ -162,13 +143,20 @@ export default function ShoppingListsPage() {
                   <View style={styles.row}>
                     <Button
                       variant="neutral"
-                      onPress={() => router.push(`/shopping-lists/${item.id}`)}
+                      onPress={() =>
+                        router.push(`/shopping-lists/${item.id}`)
+                      }
                     >
                       Otwórz
                     </Button>
                     {item.isOwner && (
                       <>
-                        <Button onPress={() => handleEditClick(item)} variant="confirm">
+                        <Button
+                          onPress={() =>
+                            startEditing(item.id, item.name)
+                          }
+                          variant="confirm"
+                        >
                           Edytuj
                         </Button>
                         <Button
@@ -185,6 +173,10 @@ export default function ShoppingListsPage() {
             </Card>
           )}
         />
+      )}
+
+      {toastData && (
+        <Toast message={toastData.message} type={toastData.type} />
       )}
     </View>
   );

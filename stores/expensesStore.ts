@@ -10,12 +10,6 @@ export type Expense = {
   user_id: string;
 };
 
-export type Member = {
-  id: string;
-  email: string;
-  role: string;
-};
-
 interface ExpensesStore {
   expenses: Expense[];
   loading: boolean;

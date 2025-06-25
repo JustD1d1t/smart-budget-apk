@@ -4,10 +4,9 @@ import { useState } from "react";
 import { ScrollView, StyleSheet, Text } from "react-native";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
-import MemberList from "../../components/ui/MemberList";
 import Select from "../../components/ui/Select";
 import { supabase } from "../../lib/supabaseClient";
-import { Member, useExpensesStore } from "../../stores/expensesStore";
+import { useExpensesStore } from "../../stores/expensesStore";
 import { useUserStore } from "../../stores/userStore";
 
 const CATEGORIES = ["żywność", "samochód", "rozrywka", "chemia", "inne"];
@@ -21,7 +20,6 @@ export default function ExpensesNewPage() {
     const [store, setStore] = useState("");
     const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
     const [category, setCategory] = useState("");
-    const [sharedWith, setSharedWith] = useState<Member[]>([]);
 
     const handleInvite = async (email: string) => {
         if (sharedWith.some((m) => m.email === email)) {
@@ -69,13 +67,6 @@ export default function ExpensesNewPage() {
     return (
         <ScrollView contentContainerStyle={styles.container}>
             <Text style={styles.title}>💸 Nowy wydatek</Text>
-
-            <MemberList
-                isOwner={true}
-                members={sharedWith}
-                onInvite={handleInvite}
-                onRemove={handleRemove}
-            />
 
             <Input
                 label="Kwota (zł)"

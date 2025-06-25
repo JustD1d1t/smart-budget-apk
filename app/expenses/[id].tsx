@@ -4,11 +4,10 @@ import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text } from "react-native";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
-import MemberList from "../../components/ui/MemberList";
 import Select from "../../components/ui/Select";
 import Toast from "../../components/ui/Toast";
 import { supabase } from "../../lib/supabaseClient";
-import { Member, useExpensesStore } from "../../stores/expensesStore";
+import { useExpensesStore } from "../../stores/expensesStore";
 import { useUserStore } from "../../stores/userStore";
 
 const CATEGORIES = ["żywność", "samochód", "rozrywka", "chemia", "inne"];
@@ -23,7 +22,6 @@ export default function EditExpensePage() {
     const [store, setStore] = useState("");
     const [date, setDate] = useState("");
     const [category, setCategory] = useState("");
-    const [sharedWith, setSharedWith] = useState<Member[]>([]);
     const [toast, setToast] = useState<{ message: string; type?: "error" | "success" } | null>(null);
 
     useEffect(() => {
@@ -54,27 +52,6 @@ export default function EditExpensePage() {
         })();
     }, [id, expenses, user]);
 
-    const handleInvite = async (email: string) => {
-        if (sharedWith.some(m => m.email === email)) {
-            setToast({ message: "Użytkownik już dodany.", type: "error" });
-            return;
-        }
-        const { data: profile, error } = await supabase
-            .from("profiles")
-            .select("id, email")
-            .eq("email", email)
-            .maybeSingle();
-        if (!profile || error) {
-            setToast({ message: "Nie znaleziono użytkownika.", type: "error" });
-            return;
-        }
-        setSharedWith(prev => [...prev, { id: profile.id, email: profile.email, role: "viewer" }]);
-    };
-
-    const handleRemove = (memberId: string) => {
-        setSharedWith(prev => prev.filter(m => m.id !== memberId));
-    };
-
     const handleSave = async () => {
         if (!id || !user?.id || !store.trim() || !amount || !date || !category) {
             setToast({ message: "Wypełnij wszystkie pola.", type: "error" });
@@ -98,13 +75,6 @@ export default function EditExpensePage() {
             <Text style={styles.title}>✏️ Edytuj wydatek</Text>
 
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-
-            <MemberList
-                isOwner
-                members={sharedWith}
-                onInvite={handleInvite}
-                onRemove={handleRemove}
-            />
 
             <Input
                 label="Kwota (zł)"

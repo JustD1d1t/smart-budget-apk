@@ -1,16 +1,19 @@
 // app/pantries/[id].tsx
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, Text } from "react-native";
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text } from "react-native";
 import AddPantryItemForm from "../../components/pantries/AddPantryItemForm";
 import EditPantryItemModal from "../../components/pantries/EditPantryItemModal";
 import GroupedItemList from "../../components/pantries/GroupedItemList";
 import ItemList from "../../components/pantries/ItemList";
 import Accordion from "../../components/ui/Accordion";
-import MemberList from "../../components/ui/MemberList";
+import MemberList from '../../components/ui/MemberList';
 import Select from "../../components/ui/Select";
 import Toast from "../../components/ui/Toast";
+import { supabase } from '../../lib/supabaseClient';
 import { usePantriesStore } from "../../stores/pantriesStore";
+
+type Viewer = { id: string; email: string; role: 'owner' | 'member' };
 
 export default function PantryDetailsPage() {
     const { id } = useLocalSearchParams<{ id: string }>();
@@ -18,32 +21,142 @@ export default function PantryDetailsPage() {
     const [filterCategory, setFilterCategory] = useState("all");
     const [sortBy, setSortBy] = useState<"name" | "category" | "expiry_date">("name");
     const [groupedView, setGroupedView] = useState(false);
+    const [isOwner, setIsOwner] = useState(false);
     const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+
+    const [members, setMembers] = useState<Viewer[]>([]);
+    const [membersLoading, setMembersLoading] = useState(true);
 
     const {
         selectedPantry,
-        isOwner,
         pantryItems,
-        pantryMembers,
         loading,
         fetchPantryDetails,
         fetchPantryItems,
-        fetchPantryMembers,
         updatePantryItem,
         deletePantryItem,
         updateItemQuantity,
-        inviteMember,
-        removeMember,
-        addPantryItem,
     } = usePantriesStore();
 
     useEffect(() => {
         if (id) {
             fetchPantryDetails(id);
             fetchPantryItems(id);
-            fetchPantryMembers(id);
+            fetchMembers();
         }
     }, [id]);
+
+
+    const fetchMembers = async () => {
+        setMembersLoading(true);
+        const { data, error } = await supabase
+            .from('pantry_members')
+            .select('id, email, role')
+            .eq('pantry_id', id);
+        if (error) {
+            Alert.alert('Błąd', 'Nie udało się pobrać współtwórców');
+        } else if (data) {
+            setMembers(data.map(m => ({ id: m.id, email: m.email, role: m.role })));
+        }
+        setMembersLoading(false);
+    };
+
+
+
+    const addShoppingListMember = async (friendEmail: string) => {
+        if (!id) return;
+
+        const { data: userData, error: userErr } = await supabase
+            .from('users')
+            .select('id')
+            .eq('email', friendEmail)
+            .limit(1)
+            .single();
+
+        if (userErr || !userData) {
+            Alert.alert('Błąd', 'Nie znaleziono użytkownika o podanym e-mailu.');
+            return;
+        }
+        const userId = userData.id;
+
+        const { data: existing, error: checkErr } = await supabase
+            .from('pantry_members')
+            .select('id')
+            .eq('pantry_id', id)
+            .eq('user_id', userId);
+
+        if (checkErr) {
+            Alert.alert('Błąd', 'Nie udało się sprawdzić współtwórców.');
+            return;
+        }
+        if (existing && existing.length > 0) {
+            Alert.alert('Użytkownik jest już współtwórcą tej listy.');
+            return;
+        }
+
+        const { error: insertErr } = await supabase
+            .from('pantry_members')
+            .insert({
+                pantry_id: id,
+                user_id: userId,
+                email: friendEmail,
+                role: 'member',
+            });
+
+        if (insertErr) {
+            Alert.alert('Błąd', 'Nie udało się dodać współtwórcy.');
+        } else {
+            fetchMembers();
+        }
+    }
+
+    const removeShoppingListMember = async (friendEmail: string): Promise<void> => {
+        if (!id) return;
+
+        // 1. Pobierz user_id po e-mailu
+        const { data: userData, error: userErr } = await supabase
+            .from('users')
+            .select('id')
+            .eq('email', friendEmail)
+            .limit(1)
+            .single();
+
+        if (userErr || !userData) {
+            Alert.alert('Błąd', 'Nie znaleziono użytkownika o podanym e-mailu.');
+            return;
+        }
+        const userId = userData.id;
+
+        // 2. Sprawdź, czy jest współtwórcą
+        const { data: existing, error: checkErr } = await supabase
+            .from('pantry_members')
+            .select('id')
+            .eq('pantry_id', id)
+            .eq('user_id', userId);
+
+        if (checkErr) {
+            Alert.alert('Błąd', 'Nie udało się sprawdzić współtwórców.');
+            return;
+        }
+        if (!existing || existing.length === 0) {
+            Alert.alert('Użytkownik nie jest współtwórcą tej listy.');
+            return;
+        }
+
+        // 3. Usuń wpis
+        const { error: deleteErr } = await supabase
+            .from('pantry_members')
+            .delete()
+            .eq('pantry_id', id)
+            .eq('user_id', userId);
+
+        if (deleteErr) {
+            Alert.alert('Błąd', 'Nie udało się usunąć współtwórcy.');
+        } else {
+            // 4. Odśwież listę współtwórców
+            fetchMembers();
+        }
+    };
 
     const handleSaveEdit = async () => {
         if (!editingItem) return;
@@ -57,16 +170,6 @@ export default function PantryDetailsPage() {
 
     const handleQuantityChange = async (itemId: string, newQuantity: number) => {
         await updateItemQuantity(itemId, newQuantity);
-    };
-
-    const handleInvite = async (memberId: string) => {
-        const result = await inviteMember(id as string, memberId);
-        setToast({ message: result.message, type: result.success ? "success" : "error" });
-    };
-
-    const handleRemove = async (memberId: string) => {
-        await removeMember(id as string, memberId);
-        setToast({ message: "Użytkownik usunięty.", type: "success" });
     };
 
     const filteredItems = pantryItems
@@ -89,16 +192,11 @@ export default function PantryDetailsPage() {
             <Text style={styles.title}>📦 Szczegóły spiżarni: {selectedPantry?.name || ""}</Text>
 
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-
-            {isOwner && (
-                <MemberList
-                    isOwner
-                    members={pantryMembers}
-                    onInvite={handleInvite}
-                    onRemove={handleRemove}
-                />
+            {membersLoading ? (
+                <Text>Ładowanie współtwórców...</Text>
+            ) : (
+                <MemberList members={members} onAddFriend={addShoppingListMember} onRemoveFriend={removeShoppingListMember} />
             )}
-
             <AddPantryItemForm pantryId={id as string} onItemAdded={() => fetchPantryItems(id as string)} />
 
             <Accordion

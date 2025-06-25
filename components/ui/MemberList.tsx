@@ -1,72 +1,85 @@
-// components/ui/MemberList.tsx
 import { useEffect, useState } from 'react';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Member, useFriendsStore } from '../../stores/friendsStore';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { useFriendsStore } from '../../stores/friendsStore';
 import Accordion from './Accordion';
+import Button from './Button';
 
-interface Props {
-    members: Member[];              // aktualnie wybrani współtwórcy
-    isOwner: boolean;               // możliwość dodawania/usuwania
-    onInvite: (id: string) => void; // dodaj do współtwórców (callback)
-    onRemove: (id: string) => void; // usuń z współtwórców (callback)
+export interface Member {
+    id: string;
+    email: string;
 }
 
-export default function MemberList({ members, isOwner, onInvite, onRemove }: Props) {
+interface Props {
+    members: Member[];
+    onAddFriend?: (friendEmail: string) => void;
+    onRemoveFriend?: (friendEmail: string) => void;
+}
+
+export default function MemberList({ members = [], onAddFriend, onRemoveFriend }: Props) {
     const { friends, fetchFriends } = useFriendsStore();
     const [expanded, setExpanded] = useState(false);
-    const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
     useEffect(() => {
         fetchFriends();
-        // zainicjalizuj lokalny stan z przekazanych members
-        setSelectedIds(members.map(m => m.id));
-    }, []);
+    }, [fetchFriends]);
 
-    // synchronizuj stan, jeśli prop members się zmienią
-    useEffect(() => {
-        setSelectedIds(members.map(m => m.id));
-    }, [members]);
-
-    const handleToggle = (id: string) => {
-        if (selectedIds.includes(id)) {
-            setSelectedIds(prev => prev.filter(x => x !== id));
-            onRemove(id);
-        } else {
-            setSelectedIds(prev => [...prev, id]);
-            onInvite(id);
-        }
-    };
-
-    const title = `Współtwórcy (${members.length})`;
+    // Przygotuj listę zaakceptowanych znajomych
+    const acceptedFriends = friends
+        .filter(f => f.status === 'accepted')
+        .map(f => ({ id: f.requester_id === f.recipient_id ? f.id : f.id, email: f.user_email }));
 
     return (
-        <Accordion title={title} expanded={expanded} onToggle={() => setExpanded(prev => !prev)}>
-            <View style={styles.container}>
-                {friends.length === 0 ? (
-                    <Text style={styles.empty}>Brak znajomych</Text>
-                ) : (
+        <Accordion
+            title="Członkowie"
+            expanded={expanded}
+            onToggle={() => setExpanded(prev => !prev)}
+        >
+            <View style={styles.content}>
+                {/* Sekcja: Znajomi */}
+                <Text style={styles.sectionTitle}>Znajomi</Text>
+                {acceptedFriends.length > 0 ? (
                     <FlatList
-                        data={friends}
+                        data={acceptedFriends}
                         keyExtractor={item => item.id}
+                        scrollEnabled={false}
                         renderItem={({ item }) => {
-                            const selected = selectedIds.includes(item.id);
+                            const isCollaborator = members.some(m => m.email === item.email);
                             return (
                                 <View style={styles.memberRow}>
-                                    <Text style={styles.email}>{item.user_email}</Text>
-                                    {isOwner && (
-                                        <TouchableOpacity
-                                            onPress={() => handleToggle(item.id)}
-                                            style={[styles.btn, selected ? styles.removeBtn : styles.addBtn]}
-                                        >
-                                            <Text style={selected ? styles.removeText : styles.addText}>
-                                                {selected ? 'Usuń' : 'Dodaj'}
-                                            </Text>
-                                        </TouchableOpacity>
+                                    <Text style={styles.email}>{item.email}</Text>
+                                    {onAddFriend && !isCollaborator && (
+                                        <Button size="sm" variant="confirm" onPress={() => onAddFriend(item.email)}>
+                                            Dodaj
+                                        </Button>
                                     )}
                                 </View>
                             );
                         }}
                     />
+                ) : (
+                    <Text style={styles.emptyText}>Brak znajomych</Text>
+                )}
+
+                {/* Sekcja: Współtwórcy */}
+                <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Współtwórcy</Text>
+                {members.length > 0 ? (
+                    <FlatList
+                        data={members}
+                        keyExtractor={item => item.id}
+                        scrollEnabled={false}
+                        renderItem={({ item }) => (
+                            <View style={styles.memberRow}>
+                                <Text style={styles.email}>{item.email}</Text>
+                                {onRemoveFriend && (
+                                    <Button size="sm" variant="danger" onPress={() => onRemoveFriend(item.email)}>
+                                        Usuń
+                                    </Button>
+                                )}
+                            </View>
+                        )}
+                    />
+                ) : (
+                    <Text style={styles.emptyText}>Brak współtwórców</Text>
                 )}
             </View>
         </Accordion>
@@ -74,25 +87,26 @@ export default function MemberList({ members, isOwner, onInvite, onRemove }: Pro
 }
 
 const styles = StyleSheet.create({
-    container: { paddingVertical: 8 },
+    content: {
+        padding: 12,
+    },
+    sectionTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginBottom: 8,
+    },
     memberRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingVertical: 8,
-        borderBottomWidth: 1,
-        borderColor: '#eee',
     },
-    email: { fontSize: 16 },
-    btn: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 6 },
-    addBtn: { backgroundColor: '#10b981' },
-    removeBtn: { backgroundColor: '#ef4444' },
-    addText: { color: '#fff' },
-    removeText: { color: '#fff' },
-    empty: {
+    email: {
+        fontSize: 14,
+    },
+    emptyText: {
+        fontSize: 14,
         fontStyle: 'italic',
         color: '#888',
-        textAlign: 'center',
-        marginVertical: 12,
     },
 });

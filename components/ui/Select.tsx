@@ -27,8 +27,9 @@ export default function Select({
                 }}
             >
                 <Picker selectedValue={value} onValueChange={onChange}>
+                    <Picker.Item label={placeholder} value="" />
                     {options.map((opt) => (
-                        <Picker.Item key={opt} label={opt === 'all' ? 'Wszystkie' : opt} value={opt} />
+                        <Picker.Item key={opt} label={opt === '' ? placeholder : opt} value={opt} />
                     ))}
                 </Picker>
             </View>
