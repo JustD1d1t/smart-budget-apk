@@ -76,14 +76,14 @@ export default function LoginPage() {
             <Card style={styles.card}>
                 <Text style={styles.header}>Logowanie</Text>
                 <Input
-                    placeholder="Email"
+                    label="Email"
                     value={email}
                     onChangeText={setEmail}
                     keyboardType="email-address"
                     autoCapitalize="none"
                 />
                 <Input
-                    placeholder="Hasło"
+                    label="Hasło"
                     value={password}
                     onChangeText={setPassword}
                     secureTextEntry
@@ -121,9 +121,9 @@ export default function LoginPage() {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, justifyContent: 'center', padding: 20 },
-    card: { width: '100%', maxWidth: 400, alignSelf: 'center' },
-    header: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
+    container: { flex: 1, justifyContent: 'center', padding: 20, },
+    card: { width: '100%', maxWidth: 400, alignSelf: 'center', gap: 8, },
+    header: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center',},
     link: { color: '#3b82f6', textAlign: 'center', marginTop: 10 },
     resetBox: { marginTop: 10 },
 });

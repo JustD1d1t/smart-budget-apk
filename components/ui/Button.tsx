@@ -1,37 +1,49 @@
-import { Text, TouchableOpacity, ViewStyle } from 'react-native';
+// components/ui/Button.tsx
+import React from 'react';
+import { StyleProp, Text, TouchableOpacity, ViewStyle } from 'react-native';
 
-export default function Button({
-    children,
-    onPress,
-    variant = 'neutral',
-}: {
+interface ButtonProps {
     children: React.ReactNode;
     onPress: () => void;
     variant?: 'neutral' | 'danger' | 'confirm' | 'warning';
-}) {
-    return (
-        <TouchableOpacity onPress={onPress} style={[styles.base, styles[variant]]}>
-            <Text style={{ color: textColor[variant], fontWeight: 'bold' }}>{children}</Text>
-        </TouchableOpacity>
-    );
+    style?: StyleProp<ViewStyle>;
 }
-
-const styles: Record<string, ViewStyle> = {
-    base: {
-        paddingVertical: 12,
-        paddingHorizontal: 16,
-        borderRadius: 8,
-        alignItems: 'center',
-    },
-    neutral: { backgroundColor: '#ccc' },
-    danger: { backgroundColor: '#e74c3c' },
-    confirm: { backgroundColor: '#2ecc71' },
-    warning: { backgroundColor: '#f39c12' },
-};
 
 const textColor = {
     neutral: '#000',
     danger: '#fff',
     confirm: '#fff',
     warning: '#000',
+};
+
+export default function Button({
+    children,
+    onPress,
+    variant = 'neutral',
+    style,
+}: ButtonProps) {
+    return (
+        <TouchableOpacity
+            onPress={onPress}
+            style={[styles.base, styles[variant], style]}
+        >
+            <Text style={{ color: textColor[variant], fontWeight: 'bold' }}>
+                {children}
+            </Text>
+        </TouchableOpacity>
+    );
+}
+
+const styles = {
+    base: {
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderRadius: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    neutral: { backgroundColor: '#ccc' },
+    danger: { backgroundColor: '#e74c3c' },
+    confirm: { backgroundColor: '#2ecc71' },
+    warning: { backgroundColor: '#f39c12' },
 };

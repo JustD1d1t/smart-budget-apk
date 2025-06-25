@@ -27,6 +27,12 @@ export default function ShoppingListDetailsPage() {
     const [groupedView, setGroupedView] = useState(false);
     const [showPantryModal, setShowPantryModal] = useState(false);
     const [pantries, setPantries] = useState<{ id: string; name: string }[]>([]);
+    const [toastData, setToastData] = useState<{ messagE: string; type: 'success' | 'error' } | null>(null);
+
+    const showToast = (message: string, type: 'success' | 'error') => {
+        setToastData({ message, type });
+        setTimeout(() => setToastData(null), 3000);
+    };
 
     const {
         selectedList,
@@ -43,7 +49,7 @@ export default function ShoppingListDetailsPage() {
         deleteBoughtItems,
         fetchLists,
         moveBoughtToPantry,
-        addItem
+        addItem,
     } = useShoppingListStore();
 
     useEffect(() => {
@@ -63,53 +69,117 @@ export default function ShoppingListDetailsPage() {
 
     const handleSelectPantry = async (pantryId: string) => {
         const { success, error } = await moveBoughtToPantry(pantryId);
-        if (success) Toast({ message: 'Przeniesiono do spiżarni', type: 'success' });
-        else Toast({ message: error || 'Błąd przenoszenia', type: 'error' });
+        if (success) {
+            showToast('Przeniesiono do spiżarni', 'success');
+        } else {
+            showToast(error || 'Błąd przenoszenia', 'error');
+        }
         setShowPantryModal(false);
     };
 
     const handleAddItem = (item: any) => {
         addItem(item);
+        showToast('Dodano produkt', 'success');
     };
 
     const addShoppingListMember = async (friendEmail: string) => {
         if (!id) return;
         const { success, error } = await addMember(id, friendEmail);
-        if (!success) Toast({ message: error!, type: 'error' });
+        if (!success) {
+            showToast(error!, error);
+        } else {
+            showToast('Dodano współtwórcę', 'success');
+        }
     };
 
     const removeShoppingListMember = async (friendEmail: string) => {
         if (!id) return;
         const { success, error } = await removeMember(id, friendEmail);
-        if (!success) Toast({ message: error!, type: 'error' });
+        if (!success) {
+            showToast(error!, error);
+        } else {
+            showToast('Usunięto współtwórcę', 'success');
+        }
     };
 
     const filteredItems = items
         .filter(item => filterCategory === 'all' || item.category === filterCategory)
-        .sort((a, b) => sortBy === 'name' ? a.name.localeCompare(b.name) : a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
+        .sort((a, b) =>
+            sortBy === 'name'
+                ? a.name.localeCompare(b.name)
+                : a.category.localeCompare(b.category) || a.name.localeCompare(b.name)
+        );
     const categories = Array.from(new Set(items.map(i => i.category)));
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
+            {toastData && <Toast message={toastData.message} type={toastData.type} />}
             <Text style={styles.title}>{selectedList?.name}</Text>
-            {membersLoading ? <ActivityIndicator /> : <MemberList members={members} onAddFriend={addShoppingListMember} onRemoveFriend={removeShoppingListMember} />}
+            {membersLoading ? (
+                <ActivityIndicator />
+            ) : (
+                <MemberList
+                    members={members}
+                    onAddFriend={addShoppingListMember}
+                    onRemoveFriend={removeShoppingListMember}
+                />
+            )}
             <AddItemForm listId={id!} onItemAdded={handleAddItem} />
             <View style={styles.filters}>
                 <Button onPress={() => setGroupedView(!groupedView)} variant="neutral">
                     {groupedView ? 'Lista' : 'Kategorie'}
                 </Button>
-                <Select label="Filtruj" value={filterCategory} options={['all', ...categories]} onChange={setFilterCategory} />
+                <Select
+                    label="Filtruj"
+                    value={filterCategory}
+                    options={['all', ...categories]}
+                    onChange={setFilterCategory}
+                />
             </View>
-            {filteredItems.length === 0 ? <Text style={styles.empty}>Brak produktów</Text> : groupedView ?
-                <GroupedItemList items={filteredItems} onToggle={toggleItem} onEdit={setEditingItem} /> :
-                <ItemList items={filteredItems} onToggle={toggleItem} onEdit={setEditingItem} />
-            }
-            {filteredItems.length > 0 && <View style={styles.actions}>
-                <Button onPress={deleteBoughtItems} variant="danger">Usuń kupione</Button>
-                <Button onPress={() => setShowPantryModal(true)} variant="confirm">Przenieś do spiżarni</Button>
-            </View>}
-            {editingItem && <EditItemModal item={editingItem} onChange={setEditingItem} onClose={() => setEditingItem(null)} onSave={handleSaveEdit} />}
-            <PantrySelectModal isOpen={showPantryModal} onClose={() => setShowPantryModal(false)} onSelect={handleSelectPantry} pantries={pantries} />
+            {filteredItems.length === 0 ? (
+                <Text style={styles.empty}>Brak produktów</Text>
+            ) : groupedView ? (
+                <GroupedItemList
+                    items={filteredItems}
+                    onToggle={toggleItem}
+                    onEdit={setEditingItem}
+                />
+            ) : (
+                <ItemList
+                    items={filteredItems}
+                    onToggle={toggleItem}
+                    onEdit={setEditingItem}
+                />
+            )}
+            {filteredItems.length > 0 && (
+                <View style={styles.actions}>
+                    <Button onPress={deleteBoughtItems} variant="danger">
+                        Usuń kupione
+                    </Button>
+                    <Button
+                        onPress={() => setShowPantryModal(true)}
+                        variant="confirm"
+                    >
+                        Przenieś do spiżarni
+                    </Button>
+                </View>
+            )}
+
+            {editingItem && (
+                <EditItemModal
+                    item={editingItem}
+                    onChange={setEditingItem}
+                    onClose={() => setEditingItem(null)}
+                    onSave={handleSaveEdit}
+                />
+            )}
+
+            <PantrySelectModal
+                isOpen={showPantryModal}
+                onClose={() => setShowPantryModal(false)}
+                onSelect={handleSelectPantry}
+                pantries={pantries}
+            />
         </ScrollView>
     );
 }

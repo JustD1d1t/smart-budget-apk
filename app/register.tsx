@@ -72,6 +72,7 @@ const styles = StyleSheet.create({
     card: {
         width: '100%',
         maxWidth: 400,
+        gap: 8,
     },
     title: {
         fontSize: 20,

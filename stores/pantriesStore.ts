@@ -22,6 +22,7 @@ interface PantriesStore {
   pantryItems: PantryItem[];
   selectedPantry: Pantry | null;
   isOwner: boolean;
+  loading: boolean;
   fetchPantries: () => Promise<void>;
   fetchPantryDetails: (pantryId: string) => Promise<void>;
   fetchPantryItems: (pantryId: string) => Promise<void>;
@@ -39,11 +40,13 @@ export const usePantriesStore = create<PantriesStore>((set, get) => ({
   pantryItems: [],
   selectedPantry: null,
   isOwner: false,
+  loading: false,
 
   fetchPantries: async () => {
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
     if (!userId) return;
+    set({ loading: true });
 
     const { data: viewerLinks } = await supabase
       .from("pantry_members")
@@ -71,7 +74,7 @@ export const usePantriesStore = create<PantriesStore>((set, get) => ({
       isOwner: p.owner_id === userId,
     }));
 
-    set({ pantries: withOwnership });
+    set({ pantries: withOwnership, loading: false });
   },
 
   fetchPantryDetails: async (id) => {

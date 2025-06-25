@@ -1,13 +1,7 @@
 // components/pantries/PantryItem.tsx
-
 import { useState } from "react";
-import {
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-} from "react-native";
+import { StyleSheet, Text, TextInput, View } from "react-native";
+import Button from "../ui/Button";
 
 interface Pantry {
     id: string;
@@ -45,44 +39,36 @@ export default function PantryItem({ pantry, onOpen, onRemove, onRename }: Props
                         placeholder="Nowa nazwa"
                     />
                     <View style={styles.buttonRow}>
-                        <TouchableOpacity style={styles.button} onPress={handleSave}>
-                            <Text style={styles.buttonText}>Zapisz</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.button, styles.outline]}
-                            onPress={() => setIsEditing(false)}
-                        >
-                            <Text style={styles.buttonText}>Anuluj</Text>
-                        </TouchableOpacity>
+                        <Button onPress={handleSave} style={styles.button} variant="confirm">
+                            Zapisz
+                        </Button>
+                        <Button onPress={() => setIsEditing(false)} style={[styles.button, styles.outline]} variant="neutral">
+                            Anuluj
+                        </Button>
                     </View>
                 </>
             ) : (
                 <>
                     <Text style={styles.title}>{pantry.name}</Text>
                     <View style={styles.buttonRow}>
-                        <TouchableOpacity
-                            style={[styles.button, styles.outline]}
-                            onPress={() => onOpen(pantry.id)}
-                        >
-                            <Text style={styles.buttonText}>Otwórz</Text>
-                        </TouchableOpacity>
+                        <Button onPress={() => onOpen(pantry.id)} style={[styles.button, styles.outline]} variant="neutral">
+                            Otwórz
+                        </Button>
                         {pantry.isOwner && (
                             <>
-                                <TouchableOpacity
-                                    style={styles.button}
+                                <Button
                                     onPress={() => {
                                         setName(pantry.name);
                                         setIsEditing(true);
                                     }}
+                                    style={styles.button}
+                                    variant="confirm"
                                 >
-                                    <Text style={styles.buttonText}>Edytuj</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={[styles.button, styles.danger]}
-                                    onPress={() => onRemove?.(pantry.id)}
-                                >
-                                    <Text style={styles.buttonText}>Usuń</Text>
-                                </TouchableOpacity>
+                                    Edytuj
+                                </Button>
+                                <Button onPress={() => onRemove?.(pantry.id)} style={[styles.button, styles.danger]} variant="danger">
+                                    Usuń
+                                </Button>
                             </>
                         )}
                     </View>
@@ -124,19 +110,12 @@ const styles = StyleSheet.create({
         flexWrap: "wrap",
     },
     button: {
-        backgroundColor: "#10b981",
-        paddingVertical: 10,
-        paddingHorizontal: 16,
-        borderRadius: 8,
+        flex: 1,
     },
     outline: {
-        backgroundColor: "#e5e7eb",
+        // override confirm background
     },
     danger: {
-        backgroundColor: "#ef4444",
-    },
-    buttonText: {
-        color: "#fff",
-        fontWeight: "600",
+        // override confirm background
     },
 });

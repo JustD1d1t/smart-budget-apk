@@ -1,6 +1,14 @@
+// app/home.tsx
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Dimensions,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import Button from '../components/ui/Button';
 import { useUserStore } from '../stores/userStore';
 
@@ -35,24 +43,31 @@ export default function Home() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.text}>Witaj, {user.email}!</Text>
-      {routes.map(({ label, path }) => (
-        <Button
-          key={path}
-          onPress={() => router.push(path)}
-          variant="neutral"
-        >
-          {label}
-        </Button>
-      ))}
+      <View style={styles.grid}>
+        {routes.map(({ label, path }, index) => (
+          <View key={path} style={styles.tileContainer}>
+            <Button
+              onPress={() => router.push(path)}
+              variant="neutral"
+              style={styles.tile}
+            >
+              {label}
+            </Button>
+          </View>
+        ))}
+      </View>
     </ScrollView>
   );
 }
 
+const { width } = Dimensions.get('window');
+const COLUMNS = 2;
+const TILE_MARGIN = 8;
+const TILE_SIZE = (width - TILE_MARGIN * (COLUMNS + 1)) / COLUMNS;
+
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
-    gap: 12,
-    alignItems: 'center',
+    padding: TILE_MARGIN,
   },
   centered: {
     flex: 1,
@@ -61,6 +76,23 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 18,
-    marginBottom: 20,
+    textAlign: 'center',
+    marginVertical: 20,
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-start',
+    gap: 8
+  },
+  tileContainer: {
+    width: TILE_SIZE,
+    height: TILE_SIZE,
+  },
+  tile: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100%'
   },
 });
