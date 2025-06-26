@@ -1,14 +1,14 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import AddPantryItemForm from "../../components/pantries/AddPantryItemForm";
 import EditPantryItemModal from "../../components/pantries/EditPantryItemModal";
@@ -85,7 +85,7 @@ export default function PantryDetailsPage() {
       setToast({ message: 'Błąd usuwania spiżarni', type: 'error' });
     } else {
       setToast({ message: 'Spiżarnia usunięta', type: 'success' });
-      router.replace('/pantries');
+      router.replace('..');
     }
   };
 

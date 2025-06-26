@@ -65,7 +65,7 @@ export default function EditExpensePage() {
             showToast(result.error || "Błąd usuwania.", "error");
             return;
         }
-        router.replace("/expenses");
+        router.replace("..");
     };
 
     return (

@@ -62,7 +62,7 @@ export default function RecipeDetailsPage() {
             setToast({ message: 'Błąd usuwania przepisu', type: 'error' });
         } else {
             setToast({ message: 'Przepis usunięty', type: 'success' });
-            router.replace('/recipes');
+            router.replace('..');
         }
     };
 

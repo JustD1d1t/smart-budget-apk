@@ -53,7 +53,7 @@ export default function ShoppingListDetailsPage() {
         fetchLists,
         moveBoughtToPantry,
         addItem,
-        removeList,     
+        removeList,
     } = useShoppingListStore();
 
     useEffect(() => {
@@ -102,7 +102,7 @@ export default function ShoppingListDetailsPage() {
         const { success, error } = await removeList(id);
         if (success) {
             showToast('Usunięto listę zakupów', 'success');
-            router.replace('/shopping-lists');
+            router.replace('..');
         } else {
             showToast(error || 'Błąd usuwania listy', 'error');
         }
