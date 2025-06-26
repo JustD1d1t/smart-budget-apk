@@ -6,6 +6,7 @@
     "orientation": "portrait",
     "platforms": [
       "android",
+      "ios",
       "web"
     ],
     "icon": "./assets/images/icon.png",
@@ -13,7 +14,9 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.justd1d1t.smartbudget",
+      "buildNumber": "1.0.0"
     },
     "android": {
       "adaptiveIcon": {
