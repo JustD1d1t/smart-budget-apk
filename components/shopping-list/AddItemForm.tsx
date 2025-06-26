@@ -6,9 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { productsDb } from '../../data/productsDb';
 import { supabase } from '../../lib/supabaseClient';
-import { flattenProductsDb } from '../../utils/flattenProductsDb';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
 import ProductAutocomplete from './ProductAutocomplete';
@@ -24,7 +22,6 @@ const AddItemForm = ({ listId, onItemAdded }: Props) => {
   const [unit, setUnit] = useState('szt');
   const [errors, setErrors] = useState<{ name?: string; quantity?: string }>({});
 
-  const flatProducts = flattenProductsDb(productsDb);
 
   const handleSubmit = async () => {
     const newErrors: typeof errors = {};
@@ -72,7 +69,6 @@ const AddItemForm = ({ listId, onItemAdded }: Props) => {
   return (
     <View style={styles.container}>
       <ProductAutocomplete
-        productsDb={flatProducts}
         value={name}
         onChange={setName}
         onClick={setName}

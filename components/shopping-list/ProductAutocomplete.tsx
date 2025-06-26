@@ -7,8 +7,11 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { productsDb } from '../../data/productsDb';
+import { flattenProductsDb } from '../../utils/flattenProductsDb';
 import Card from '../ui/Card';
 import Input from '../ui/Input';
+
 
 type Product = {
     name: string;
@@ -16,15 +19,15 @@ type Product = {
 };
 
 type Props = {
-    productsDb: Product[];
     value: string;
     onChange: (val: string) => void;
     onClick: (name: string) => void;
     error?: string;
 };
 
+const flatProducts = flattenProductsDb(productsDb);
+
 export default function ProductAutocomplete({
-    productsDb,
     value,
     onChange,
     onClick,
@@ -42,7 +45,7 @@ export default function ProductAutocomplete({
             return;
         }
 
-        const filtered = productsDb
+        const filtered = flatProducts
             .filter((product) =>
                 product.name.toLowerCase().includes(safeValue.toLowerCase())
             )

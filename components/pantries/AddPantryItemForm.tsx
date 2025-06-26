@@ -3,18 +3,20 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { productsDb } from '../../data/productsDb';
 import { supabase } from '../../lib/supabaseClient';
+import { flattenProductsDb } from '../../utils/flattenProductsDb';
+import ProductAutocomplete from "../shopping-list/ProductAutocomplete";
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
 import Toast from '../ui/Toast';
 
-const CATEGORIES = Object.keys(productsDb);
+const flatProducts = flattenProductsDb(productsDb);
+
 const UNITS = ['szt', 'kg'];
 
 type PantryItem = {
     id: string;
     name: string;
-    category: string;
     quantity: number;
     unit: string;
     expiry_date?: string | null;
@@ -27,7 +29,6 @@ interface Props {
 
 export default function AddPantryItemForm({ pantryId, onItemAdded }: Props) {
     const [name, setName] = useState('');
-    const [category, setCategory] = useState('');
     const [quantity, setQuantity] = useState('1');
     const [unit, setUnit] = useState('');
     const [expiryDate, setExpiryDate] = useState('');
@@ -37,7 +38,6 @@ export default function AddPantryItemForm({ pantryId, onItemAdded }: Props) {
     const validate = () => {
         const errs: { [key: string]: string } = {};
         if (!name.trim()) errs.name = 'Nazwa produktu jest wymagana.';
-        if (!category) errs.category = 'Wybierz kategorię.';
         if (!quantity || Number(quantity) <= 0) errs.quantity = 'Ilość musi być > 0.';
         if (!unit) errs.unit = 'Wybierz jednostkę.';
         setErrors(errs);
@@ -47,12 +47,13 @@ export default function AddPantryItemForm({ pantryId, onItemAdded }: Props) {
     const handleSubmit = async () => {
         if (!validate()) return;
         try {
+            const product = flatProducts.find(product => product.name === name);
             const { data, error } = await supabase
                 .from('pantry_items')
                 .insert({
                     pantry_id: pantryId,
                     name: name.trim(),
-                    category,
+                    category: product ? product.category : 'inne',
                     quantity: Number(quantity),
                     unit,
                     expiry_date: expiryDate || null,
@@ -61,29 +62,25 @@ export default function AddPantryItemForm({ pantryId, onItemAdded }: Props) {
                 .single();
             if (error || !data) throw error || new Error('Brak danych');
             onItemAdded(data as PantryItem);
-            setName(''); setCategory(''); setQuantity('1'); setUnit(''); setExpiryDate('');
+            setName(''); setQuantity('1'); setUnit(''); setExpiryDate('');
             setToast({ message: 'Produkt dodany!', type: 'success' });
         } catch (err: any) {
             setToast({ message: err.message || 'Błąd dodawania produktu.', type: 'error' });
         }
     };
 
+    const handleChange = (val: string) => {
+        setName(val);
+    }
+
     return (
         <View style={styles.container}>
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-            <Input
-                label="Nazwa produktu"
+            <ProductAutocomplete
                 value={name}
-                onChangeText={setName}
+                onChange={(val) => handleChange(val)}
+                onClick={(val) => handleChange(val)}
                 error={errors.name}
-            />
-            <Select
-                label="Kategoria"
-                value={category}
-                options={CATEGORIES.map(c => ({ label: c, value: c }))}
-                onChange={setCategory}
-                placeholder="Wybierz kategorię"
-                error={errors.category}
             />
             <View style={styles.row}>
                 <Input

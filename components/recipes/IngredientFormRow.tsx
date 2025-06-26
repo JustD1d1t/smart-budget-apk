@@ -23,7 +23,6 @@ type Props = {
     onChange: (index: number, updated: Ingredient) => void;
     onRemove: (index: number) => void;
     errors?: IngredientError;
-    productsDb: { name: string; category: string }[];
 };
 
 export default function IngredientFormRow({
@@ -48,7 +47,6 @@ export default function IngredientFormRow({
 
                     <View >
                         <ProductAutocomplete
-                            productsDb={productsDb}
                             value={ingredient.name}
                             onChange={(val) => handleChange("name", val)}
                             onClick={(val) => handleChange("name", val)}
