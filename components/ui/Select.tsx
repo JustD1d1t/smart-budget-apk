@@ -26,7 +26,11 @@ export default function Select({
             {label && <Text style={styles.label}>{label}</Text>}
             <View style={[styles.pickerContainer, error && styles.pickerError]}>
                 <Picker selectedValue={value} onValueChange={(val) => onChange(val)}>
-                    <Picker.Item label={placeholder} value="" />
+                    <Picker.Item
+                        label={placeholder}
+                        value=""
+                        enabled={false}
+                    />
                     {options.map((opt) => (
                         <Picker.Item key={opt.value} label={opt.label} value={opt.value} />
                     ))}

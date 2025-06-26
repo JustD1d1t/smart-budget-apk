@@ -1,7 +1,14 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, TextInput, TextInputProps, TouchableOpacity, View } from 'react-native';
-
+// components/ui/Input.tsx
 import DateTimePicker from '@react-native-community/datetimepicker';
+import React, { useState } from 'react';
+import {
+  StyleSheet,
+  Text,
+  TextInput,
+  TextInputProps,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -17,10 +24,12 @@ export default function Input({
   value,
   onChangeText,
   maximumDate,
+  secureTextEntry = false,              // 1. wyciągamy prop
   ...props
 }: InputProps) {
   const [showPicker, setShowPicker] = useState(false);
-  const dateValue = typeof value === 'string' && value ? new Date(value) : new Date();
+  const dateValue =
+    typeof value === 'string' && value ? new Date(value) : new Date();
 
   const handleDateChange = (_: any, selected?: Date) => {
     setShowPicker(false);
@@ -57,6 +66,10 @@ export default function Input({
           {...props}
           value={value}
           onChangeText={onChangeText}
+          secureTextEntry={secureTextEntry}         // 2. explicite
+          textContentType={secureTextEntry ? 'password' : undefined}  // 3. ułatwia systemowi
+          autoComplete={secureTextEntry ? 'password' : undefined}
+          autoCorrect={false}
           style={[styles.input, error && styles.inputError]}
         />
       )}
@@ -67,6 +80,7 @@ export default function Input({
 }
 
 const styles = StyleSheet.create({
+  wrapper: { marginVertical: 8 },        // 4. brakowało wrappera
   label: { marginBottom: 4, fontWeight: '500' },
   input: {
     borderWidth: 1,
@@ -74,6 +88,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 10,
     backgroundColor: '#fff',
+    color: '#000',                       // 5. upewniamy się, że tekst jest czarny
   },
   inputError: { borderColor: '#dc2626' },
   errorText: { color: '#dc2626', marginTop: 4, fontSize: 12 },

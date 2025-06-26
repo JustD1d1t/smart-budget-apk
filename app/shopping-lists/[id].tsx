@@ -24,7 +24,7 @@ export default function ShoppingListDetailsPage() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const router = useRouter();
     const [editingItem, setEditingItem] = useState<any | null>(null);
-    const [filterCategory, setFilterCategory] = useState('all');
+    const [filterCategory, setFilterCategory] = useState('wszystkie');
     const [sortBy, setSortBy] = useState<'name' | 'category'>('name');
     const [groupedView, setGroupedView] = useState(false);
     const [showPantryModal, setShowPantryModal] = useState(false);
@@ -98,7 +98,7 @@ export default function ShoppingListDetailsPage() {
     };
 
     const filteredItems = items
-        .filter(item => filterCategory === 'all' || item.category === filterCategory)
+        .filter(item => filterCategory === 'wszystkie' || item.category === filterCategory)
         .sort((a, b) =>
             sortBy === 'name'
                 ? a.name.localeCompare(b.name)
@@ -129,7 +129,7 @@ export default function ShoppingListDetailsPage() {
                 <Select
                     label="Filtruj"
                     value={filterCategory}
-                    options={['all', ...categories]}
+                    options={['wszystkie', ...categories].map(c => ({ label: c, value: c }))}
                     onChange={setFilterCategory}
                 />
             </View>
@@ -140,6 +140,7 @@ export default function ShoppingListDetailsPage() {
                     items={filteredItems}
                     onToggle={toggleItem}
                     onEdit={setEditingItem}
+                    filterCategory={filterCategory}
                 />
             ) : (
                 <ItemList

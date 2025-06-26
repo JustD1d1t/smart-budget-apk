@@ -44,7 +44,7 @@ export default function GroupedItemList({
     return (
         <View>
             {categories
-                .filter((cat) => filterCategory === "all" || cat === filterCategory)
+                .filter((cat) => filterCategory === "wszystkie" || cat === filterCategory)
                 .map((cat) => {
                     const isOpen = activeSections.includes(cat);
                     const categoryItems = items.filter((item) => item.category === cat);
