@@ -1,5 +1,4 @@
 // app/shopping-lists/index.tsx
-import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   FlatList,
@@ -7,14 +6,13 @@ import {
   Text,
   View,
 } from 'react-native';
+import ListItem from '../../components/shopping-list/ListItem'; // <<–– importujemy tu
 import Button from '../../components/ui/Button';
-import Card from '../../components/ui/Card';
 import Input from '../../components/ui/Input';
 import Toast from '../../components/ui/Toast';
 import { useShoppingListStore } from '../../stores/shoppingListStore';
 
 export default function ShoppingListsPage() {
-  const router = useRouter();
   const { lists, fetchLists, addList, removeList, renameList } =
     useShoppingListStore();
 
@@ -22,7 +20,6 @@ export default function ShoppingListsPage() {
   const [newListName, setNewListName] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
-
   const [toastData, setToastData] = useState<{
     message: string;
     type: 'success' | 'error';
@@ -37,10 +34,7 @@ export default function ShoppingListsPage() {
     setLoading(true);
     const { success, error } = await fetchLists();
     setLoading(false);
-
-    if (!success) {
-      showToast(`Błąd, ${error}` || 'Nie udało się pobrać list', 'error');
-    }
+    if (!success) showToast(error || 'Nie udało się pobrać list', 'error');
   };
 
   useEffect(() => {
@@ -56,39 +50,9 @@ export default function ShoppingListsPage() {
     if (success) {
       showToast('Lista dodana.', 'success');
       setNewListName('');
-      await fetchLists();
+      reload();
     } else {
       showToast(error || 'Nie udało się dodać listy.', 'error');
-    }
-  };
-
-  const handleRemoveList = async (id: string) => {
-    const { success, error } = await removeList(id);
-    if (success) {
-      showToast('Lista usunięta.', 'success');
-    } else {
-      showToast(error || 'Nie udało się usunąć listy.', 'error');
-    }
-  };
-
-  const startEditing = (id: string, name: string) => {
-    setEditingId(id);
-    setEditingName(name);
-  };
-
-  const handleRename = async (id: string) => {
-    if (!editingName.trim()) {
-      showToast('Nazwa nie może być pusta.', 'error');
-      return;
-    }
-    const { success, error } = await renameList(id, editingName.trim());
-    if (success) {
-      showToast('Zmieniono nazwę listy.', 'success');
-      setEditingId(null);
-      setEditingName('');
-      await fetchLists();
-    } else {
-      showToast(error || 'Nie udało się zmienić nazwy.', 'error');
     }
   };
 
@@ -115,62 +79,9 @@ export default function ShoppingListsPage() {
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ gap: 12 }}
           renderItem={({ item }) => (
-            <Card>
-              {editingId === item.id ? (
-                <>
-                  <Input
-                    value={editingName}
-                    onChangeText={setEditingName}
-                  />
-                  <View style={styles.row}>
-                    <Button
-                      onPress={() => handleRename(item.id)}
-                      variant="confirm"
-                    >
-                      Zapisz
-                    </Button>
-                    <Button
-                      onPress={() => setEditingId(null)}
-                      variant="neutral"
-                    >
-                      Anuluj
-                    </Button>
-                  </View>
-                </>
-              ) : (
-                <>
-                  <Text style={styles.listName}>{item.name}</Text>
-                  <View style={styles.row}>
-                    <Button
-                      variant="neutral"
-                      onPress={() =>
-                        router.push(`/shopping-lists/${item.id}`)
-                      }
-                    >
-                      Otwórz
-                    </Button>
-                    {item.isOwner && (
-                      <>
-                        <Button
-                          onPress={() =>
-                            startEditing(item.id, item.name)
-                          }
-                          variant="confirm"
-                        >
-                          Edytuj
-                        </Button>
-                        <Button
-                          onPress={() => handleRemoveList(item.id)}
-                          variant="danger"
-                        >
-                          Usuń
-                        </Button>
-                      </>
-                    )}
-                  </View>
-                </>
-              )}
-            </Card>
+            <ListItem
+              list={item}
+            />
           )}
         />
       )}
@@ -195,14 +106,12 @@ const styles = StyleSheet.create({
   form: {
     gap: 8,
   },
-  listName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 12,
+  inlineEdit: {
+    marginTop: 8,
   },
   row: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: 8,
+    marginTop: 8,
   },
 });

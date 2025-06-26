@@ -36,7 +36,7 @@ export default function Toast({
 
 const styles = StyleSheet.create({
     toast: {
-        position: 'absolute',
+        position: 'fixed',
         bottom: 20,
         left: 20,
         right: 20,

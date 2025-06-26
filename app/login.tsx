@@ -125,5 +125,5 @@ const styles = StyleSheet.create({
     card: { width: '100%', maxWidth: 400, alignSelf: 'center', gap: 8, },
     header: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center',},
     link: { color: '#3b82f6', textAlign: 'center', marginTop: 10 },
-    resetBox: { marginTop: 10 },
+    resetBox: { marginTop: 10, gap: 8 },
 });

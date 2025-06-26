@@ -1,15 +1,22 @@
-// app/expenses/new.tsx
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { ScrollView, StyleSheet, Text } from "react-native";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
-import Select from "../../components/ui/Select";
-import { supabase } from "../../lib/supabaseClient";
+import Select, { SelectOption } from "../../components/ui/Select";
+import Toast from "../../components/ui/Toast";
+import { productsDb } from '../../data/productsDb';
 import { useExpensesStore } from "../../stores/expensesStore";
 import { useUserStore } from "../../stores/userStore";
 
-const CATEGORIES = ["żywność", "samochód", "rozrywka", "chemia", "inne"];
+const CATEGORIES: SelectOption[] = Object.keys(productsDb).map(cat => ({ label: cat, value: cat }));
+
+type FormErrors = {
+    amount?: string;
+    store?: string;
+    date?: string;
+    category?: string;
+};
 
 export default function ExpensesNewPage() {
     const { user } = useUserStore();
@@ -20,52 +27,40 @@ export default function ExpensesNewPage() {
     const [store, setStore] = useState("");
     const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
     const [category, setCategory] = useState("");
+    const [errors, setErrors] = useState<FormErrors>({});
+    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-    const handleInvite = async (email: string) => {
-        if (sharedWith.some((m) => m.email === email)) {
-            return Alert.alert("Użytkownik już dodany.");
-        }
-        const { data: profile, error } = await supabase
-            .from("profiles")
-            .select("id, email")
-            .eq("email", email)
-            .maybeSingle();
-        if (!profile || error) {
-            return Alert.alert("Nie znaleziono użytkownika.");
-        }
-        setSharedWith((prev) => [
-            ...prev,
-            { id: profile.id, email: profile.email, role: "viewer" },
-        ]);
+    const showToast = (message: string, type: 'success' | 'error' = 'error') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 3000);
     };
 
-    const handleRemove = (id: string) => {
-        setSharedWith((prev) => prev.filter((m) => m.id !== id));
-    };
-
-    const validateForm = () => {
-        if (amount <= 0) return Alert.alert("Kwota musi być większa od zera.");
-        if (!store.trim()) return Alert.alert("Sklep nie może być pusty.");
-        if (new Date(date) > new Date()) return Alert.alert("Data nie może być z przyszłości.");
-        if (!category) return Alert.alert("Wybierz kategorię.");
-        return true;
+    const validateForm = (): boolean => {
+        const errs: FormErrors = {};
+        if (amount <= 0) errs.amount = "Kwota musi być większa od zera.";
+        if (!store.trim()) errs.store = "Sklep nie może być pusty.";
+        if (new Date(date) > new Date()) errs.date = "Data nie może być z przyszłości.";
+        if (!category) errs.category = "Wybierz kategorię.";
+        setErrors(errs);
+        return Object.keys(errs).length === 0;
     };
 
     const handleAdd = async () => {
         if (!validateForm() || !user?.id) return;
         const result = await addExpense(
-            { amount, store: store.trim(), date, category, user_id: user.id },
-            sharedWith
+            { amount, store: store.trim(), date, category, user_id: user.id }
         );
         if (!result.success) {
-            return Alert.alert(result.error || "Błąd zapisu wydatku.");
+            showToast(result.error || "Błąd zapisu wydatku.", 'error');
+            return;
         }
-        Alert.alert("Wydatek dodany!");
+        showToast("Wydatek dodany!", 'success');
         router.push("/expenses");
     };
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
+            {toast && <Toast message={toast.message} type={toast.type} />}
             <Text style={styles.title}>💸 Nowy wydatek</Text>
 
             <Input
@@ -73,19 +68,23 @@ export default function ExpensesNewPage() {
                 keyboardType="numeric"
                 value={amount.toString()}
                 onChangeText={(text) => setAmount(Number(text))}
+                error={errors.amount}
             />
 
             <Input
                 label="Sklep"
                 value={store}
                 onChangeText={setStore}
+                error={errors.store}
             />
 
             <Input
                 label="Data"
-                placeholder="YYYY-MM-DD"
+                type="date"
                 value={date}
                 onChangeText={setDate}
+                error={errors.date}
+                maximumDate={new Date()}
             />
 
             <Select
@@ -93,6 +92,7 @@ export default function ExpensesNewPage() {
                 value={category}
                 options={CATEGORIES}
                 onChange={setCategory}
+                error={errors.category}
             />
 
             <Button onPress={handleAdd} variant="confirm">
@@ -103,6 +103,6 @@ export default function ExpensesNewPage() {
 }
 
 const styles = StyleSheet.create({
-    container: { padding: 16, gap: 16 },
+    container: { padding: 16, gap: 8 },
     title: { fontSize: 20, fontWeight: "bold", marginBottom: 8 },
 });

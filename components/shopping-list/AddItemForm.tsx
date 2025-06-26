@@ -1,15 +1,14 @@
 import { useState } from 'react';
 import {
-    Alert,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { productsDb } from '../../data/productsDb';
 import { supabase } from '../../lib/supabaseClient';
 import { flattenProductsDb } from '../../utils/flattenProductsDb';
-import Accordion from '../ui/Accordion';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
 import ProductAutocomplete from './ProductAutocomplete';
@@ -71,37 +70,35 @@ const AddItemForm = ({ listId, onItemAdded }: Props) => {
   };
 
   return (
-    <Accordion title="Dodaj nowy produkt">
-      <View style={styles.container}>
-        <ProductAutocomplete
-          productsDb={flatProducts}
-          value={name}
-          onChange={setName}
-          onClick={setName}
-          error={errors.name}
-        />
+    <View style={styles.container}>
+      <ProductAutocomplete
+        productsDb={flatProducts}
+        value={name}
+        onChange={setName}
+        onClick={setName}
+        error={errors.name}
+      />
 
-        <Input
-          label="Ilość"
-          placeholder="np. 2"
-          keyboardType="numeric"
-          value={quantity}
-          onChangeText={setQuantity}
-          error={errors.quantity}
-        />
+      <Input
+        label="Ilość"
+        placeholder="np. 2"
+        keyboardType="numeric"
+        value={quantity}
+        onChangeText={setQuantity}
+        error={errors.quantity}
+      />
 
-        <Select
-          label="Jednostka"
-          value={unit}
-          options={['szt', 'kg', 'g', 'l', 'ml']}
-          onChange={setUnit}
-        />
+      <Select
+        label="Jednostka"
+        value={unit}
+        options={[{ label: 'szt', value: 'szt' }, { label: 'kg', value: 'kg' }, { label: 'g', value: 'g' }, { label: 'l', value: 'l' }, { label: 'ml', value: 'ml' }]}
+        onChange={setUnit}
+      />
 
-        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-          <Text style={styles.buttonText}>Dodaj produkt</Text>
-        </TouchableOpacity>
-      </View>
-    </Accordion>
+      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+        <Text style={styles.buttonText}>Dodaj produkt</Text>
+      </TouchableOpacity>
+    </View>
   );
 };
 
@@ -110,6 +107,7 @@ export default AddItemForm;
 const styles = StyleSheet.create({
   container: {
     gap: 2,
+    marginBottom: 8,
   },
   button: {
     backgroundColor: '#10b981',

@@ -6,7 +6,7 @@ import IngredientFormRow, { Ingredient, IngredientError } from "./IngredientForm
 
 interface Props {
     ingredients: Ingredient[];
-    setIngredients: (items: Ingredient[]) => void;
+    setIngredients?: (items: Ingredient[]) => void;
     errors?: IngredientError[];
 }
 

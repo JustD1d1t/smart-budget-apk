@@ -1,12 +1,12 @@
 // app/pantries/[id].tsx
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text } from "react-native";
+import { ActivityIndicator, Alert, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import AddPantryItemForm from "../../components/pantries/AddPantryItemForm";
 import EditPantryItemModal from "../../components/pantries/EditPantryItemModal";
 import GroupedItemList from "../../components/pantries/GroupedItemList";
 import ItemList from "../../components/pantries/ItemList";
-import Accordion from "../../components/ui/Accordion";
+import Button from '../../components/ui/Button';
 import MemberList from '../../components/ui/MemberList';
 import Select from "../../components/ui/Select";
 import Toast from "../../components/ui/Toast";
@@ -15,27 +15,33 @@ import { usePantriesStore } from "../../stores/pantriesStore";
 
 type Viewer = { id: string; email: string; role: 'owner' | 'member' };
 
+const sortOptions = [{ label: 'nazwa', value: "name" }, { label: 'kategoria', value: "category" }, { label: 'data przydatności', value: "expiry_date" }]
+
 export default function PantryDetailsPage() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const [editingItem, setEditingItem] = useState<any>(null);
     const [filterCategory, setFilterCategory] = useState("all");
     const [sortBy, setSortBy] = useState<"name" | "category" | "expiry_date">("name");
     const [groupedView, setGroupedView] = useState(false);
-    const [isOwner, setIsOwner] = useState(false);
     const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+    const [showMembers, setShowMembers] = useState(false);
+    const [showAddProduct, setShowAddProduct] = useState(false);
+    const [filtersOpen, setFiltersOpen] = useState(false);
 
     const [members, setMembers] = useState<Viewer[]>([]);
-    const [membersLoading, setMembersLoading] = useState(true);
 
     const {
         selectedPantry,
         pantryItems,
         loading,
+        isOwner,
         fetchPantryDetails,
         fetchPantryItems,
         updatePantryItem,
         deletePantryItem,
         updateItemQuantity,
+        addMember,
+        removeMember
     } = usePantriesStore();
 
     useEffect(() => {
@@ -46,9 +52,13 @@ export default function PantryDetailsPage() {
         }
     }, [id]);
 
+    const handleAddItem = async () => {
+        await fetchPantryItems(id);
+        setShowAddProduct(false)
+    }
+
 
     const fetchMembers = async () => {
-        setMembersLoading(true);
         const { data, error } = await supabase
             .from('pantry_members')
             .select('id, email, role')
@@ -58,104 +68,22 @@ export default function PantryDetailsPage() {
         } else if (data) {
             setMembers(data.map(m => ({ id: m.id, email: m.email, role: m.role })));
         }
-        setMembersLoading(false);
     };
 
 
 
-    const addShoppingListMember = async (friendEmail: string) => {
+    const handleAddMember = async (email: string) => {
         if (!id) return;
+        const { success, error } = await addMember(id, email);
+        setToast({ message: success ? 'Dodano współtwórcę' : error!, type: success ? 'success' : 'error' });
+        if (success) fetchMembers();
+    };
 
-        const { data: userData, error: userErr } = await supabase
-            .from('users')
-            .select('id')
-            .eq('email', friendEmail)
-            .limit(1)
-            .single();
-
-        if (userErr || !userData) {
-            Alert.alert('Błąd', 'Nie znaleziono użytkownika o podanym e-mailu.');
-            return;
-        }
-        const userId = userData.id;
-
-        const { data: existing, error: checkErr } = await supabase
-            .from('pantry_members')
-            .select('id')
-            .eq('pantry_id', id)
-            .eq('user_id', userId);
-
-        if (checkErr) {
-            Alert.alert('Błąd', 'Nie udało się sprawdzić współtwórców.');
-            return;
-        }
-        if (existing && existing.length > 0) {
-            Alert.alert('Użytkownik jest już współtwórcą tej listy.');
-            return;
-        }
-
-        const { error: insertErr } = await supabase
-            .from('pantry_members')
-            .insert({
-                pantry_id: id,
-                user_id: userId,
-                email: friendEmail,
-                role: 'member',
-            });
-
-        if (insertErr) {
-            Alert.alert('Błąd', 'Nie udało się dodać współtwórcy.');
-        } else {
-            fetchMembers();
-        }
-    }
-
-    const removeShoppingListMember = async (friendEmail: string): Promise<void> => {
+    const handleRemoveMember = async (email: string) => {
         if (!id) return;
-
-        // 1. Pobierz user_id po e-mailu
-        const { data: userData, error: userErr } = await supabase
-            .from('users')
-            .select('id')
-            .eq('email', friendEmail)
-            .limit(1)
-            .single();
-
-        if (userErr || !userData) {
-            Alert.alert('Błąd', 'Nie znaleziono użytkownika o podanym e-mailu.');
-            return;
-        }
-        const userId = userData.id;
-
-        // 2. Sprawdź, czy jest współtwórcą
-        const { data: existing, error: checkErr } = await supabase
-            .from('pantry_members')
-            .select('id')
-            .eq('pantry_id', id)
-            .eq('user_id', userId);
-
-        if (checkErr) {
-            Alert.alert('Błąd', 'Nie udało się sprawdzić współtwórców.');
-            return;
-        }
-        if (!existing || existing.length === 0) {
-            Alert.alert('Użytkownik nie jest współtwórcą tej listy.');
-            return;
-        }
-
-        // 3. Usuń wpis
-        const { error: deleteErr } = await supabase
-            .from('pantry_members')
-            .delete()
-            .eq('pantry_id', id)
-            .eq('user_id', userId);
-
-        if (deleteErr) {
-            Alert.alert('Błąd', 'Nie udało się usunąć współtwórcy.');
-        } else {
-            // 4. Odśwież listę współtwórców
-            fetchMembers();
-        }
+        const { success, error } = await removeMember(id, email);
+        setToast({ message: success ? 'Usunięto współtwórcę' : error!, type: success ? 'success' : 'error' });
+        if (success) fetchMembers();
     };
 
     const handleSaveEdit = async () => {
@@ -189,37 +117,26 @@ export default function PantryDetailsPage() {
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
-            <Text style={styles.title}>📦 Szczegóły spiżarni: {selectedPantry?.name || ""}</Text>
+            <View style={styles.header}>
+                <Text style={styles.title}>📦 {selectedPantry?.name || ""}</Text>
+
+                <View style={styles.headerActions}>
+                    <TouchableOpacity
+                        onPress={() => setFiltersOpen(true)}
+                    >
+                        <Text style={styles.filterIcon}>⚙️</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity onPress={() => setShowMembers(true)}>
+                        <Text style={styles.memberIcon}>👤</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => setShowAddProduct(true)}>
+                        <Text style={styles.memberIcon}>➕</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
 
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-            {membersLoading ? (
-                <Text>Ładowanie współtwórców...</Text>
-            ) : (
-                <MemberList members={members} onAddFriend={addShoppingListMember} onRemoveFriend={removeShoppingListMember} />
-            )}
-            <AddPantryItemForm pantryId={id as string} onItemAdded={() => fetchPantryItems(id as string)} />
-
-            <Accordion
-                title={groupedView ? "Pokaż jako listę" : "Pogrupuj po kategoriach"}
-                expanded
-                onToggle={() => setGroupedView(!groupedView)}
-            />
-
-            <Select
-                label="Kategoria"
-                value={filterCategory}
-                options={categories}
-                onChange={setFilterCategory}
-            />
-
-            {!groupedView && (
-                <Select
-                    label="Sortuj po"
-                    value={sortBy}
-                    options={["name", "category", "expiry_date"]}
-                    onChange={setSortBy}
-                />
-            )}
 
             {loading ? (
                 <ActivityIndicator style={styles.loader} />
@@ -244,6 +161,53 @@ export default function PantryDetailsPage() {
                     onSave={handleSaveEdit}
                 />
             )}
+            <Modal visible={showMembers} animationType="slide">
+                <View style={styles.modal}>
+                    <MemberList
+                        isOwner={isOwner}
+                        members={members}
+                        onAddFriend={handleAddMember}
+                        onRemoveFriend={handleRemoveMember}
+                    />
+                    <Button onPress={() => setShowMembers(false)} variant="neutral">Zamknij</Button>
+                </View>
+            </Modal>
+            <Modal visible={showAddProduct} animationType="slide">
+                <View style={styles.modal}>
+                    <AddPantryItemForm pantryId={id as string} onItemAdded={handleAddItem} />
+                    <Button onPress={() => setShowAddProduct(false)} variant="neutral">Zamknij</Button>
+                </View>
+            </Modal>
+
+            <Modal
+                visible={filtersOpen}
+                animationType="slide"
+                onRequestClose={() => setFiltersOpen(false)}
+            >
+
+                <View style={[styles.modal, styles.gap]}>
+                    <Select
+                        label="Kategoria"
+                        value={filterCategory}
+                        options={categories.map(c => ({ value: c, label: c }))}
+                        onChange={setFilterCategory}
+                    />
+
+                    {!groupedView && (
+                        <Select
+                            label="Sortuj po"
+                            value={sortBy}
+                            options={sortOptions}
+                            onChange={setSortBy}
+                        />
+                    )}
+
+                    <Button onPress={() => setGroupedView(!groupedView)} variant="neutral">
+                        {groupedView ? 'Pokaż jako listę' : 'Pogrupuj po kategoriach'}
+                    </Button>
+                    <Button onPress={() => setFiltersOpen(false)} variant="neutral">Zamknij</Button>
+                </View>
+            </Modal>
         </ScrollView>
     );
 }
@@ -253,4 +217,12 @@ const styles = StyleSheet.create({
     title: { fontSize: 20, fontWeight: "bold", marginBottom: 16 },
     loader: { marginVertical: 20 },
     empty: { textAlign: "center", color: "#888", marginVertical: 20 },
+    modal: { flex: 1, padding: 16, backgroundColor: '#fff' },
+    memberIcon: { fontSize: 24 },
+    header: { display: 'flex', flexDirection: 'row', justifyContent: 'space-between' },
+    headerActions: { display: 'flex', flexDirection: 'row', gap: 8 },
+    filterIcon: {
+        fontSize: 24,
+    },
+    gap: { gap: 12 }
 });

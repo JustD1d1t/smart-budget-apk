@@ -13,7 +13,11 @@ export type Expense = {
 interface ExpensesStore {
   expenses: Expense[];
   loading: boolean;
-  fetchExpenses: (userId: string, startDate: string, endDate: string) => Promise<void>;
+  fetchExpenses: (
+    userId: string,
+    startDate: string,
+    endDate: string
+  ) => Promise<void>;
   addExpense: (
     data: Omit<Expense, "id">,
     sharedWith?: Member[]
@@ -24,7 +28,7 @@ interface ExpensesStore {
     updatedData: Omit<Expense, "id" | "user_id">,
     sharedWith: Member[]
   ) => Promise<{ success: boolean; error?: string }>;
-  deleteExpense: (id: string, userId: string) => Promise<void>;
+  deleteExpense: (id: string, userId: string) => Promise<{success: boolean, error?: string}>;
   setExpenses: (expenses: Expense[]) => void;
 }
 
@@ -67,9 +71,11 @@ export const useExpensesStore = create<ExpensesStore>((set, get) => ({
     }
 
     if (sharedWith.length > 0) {
-      await supabase.from("expense_viewers").insert(
-        sharedWith.map((m) => ({ expense_id: inserted.id, user_id: m.id }))
-      );
+      await supabase
+        .from("expense_viewers")
+        .insert(
+          sharedWith.map((m) => ({ expense_id: inserted.id, user_id: m.id }))
+        );
     }
 
     set((state) => ({ expenses: [inserted, ...state.expenses] }));
@@ -90,9 +96,9 @@ export const useExpensesStore = create<ExpensesStore>((set, get) => ({
     await supabase.from("expense_viewers").delete().eq("expense_id", id);
 
     if (sharedWith.length > 0) {
-      await supabase.from("expense_viewers").insert(
-        sharedWith.map((m) => ({ expense_id: id, user_id: m.id }))
-      );
+      await supabase
+        .from("expense_viewers")
+        .insert(sharedWith.map((m) => ({ expense_id: id, user_id: m.id })));
     }
 
     const updated = { id, user_id: userId, ...updatedData } as Expense;
@@ -103,14 +109,27 @@ export const useExpensesStore = create<ExpensesStore>((set, get) => ({
     return { success: true };
   },
 
-  deleteExpense: async (id, userId) => {
-    const { expenses } = get();
-    const toDelete = expenses.find((e) => e.id === id);
-    if (toDelete?.user_id !== userId) return;
+  deleteExpense: async (
+    id: string,
+    userId: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const { expenses } = get();
+      const toDelete = expenses.find((e) => e.id === id);
+      if (!toDelete || toDelete.user_id !== userId) {
+        return {
+          success: false,
+          error: "Brak uprawnień lub wydatek nie istnieje",
+        };
+      }
 
-    const { error } = await supabase.from("expenses").delete().eq("id", id);
-    if (!error) {
+      const { error } = await supabase.from("expenses").delete().eq("id", id);
+      if (error) throw error;
+
       set({ expenses: expenses.filter((e) => e.id !== id) });
+      return { success: true };
+    } catch (e: any) {
+      return { success: false, error: e.message };
     }
   },
 

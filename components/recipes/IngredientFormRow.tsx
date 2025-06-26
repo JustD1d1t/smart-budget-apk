@@ -1,6 +1,7 @@
-import { Picker } from "@react-native-picker/picker";
-import { Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import ProductAutocomplete from "../shopping-list/ProductAutocomplete";
+import Input from "../ui/Input";
+import Select from "../ui/Select";
 
 export type Ingredient = {
     name: string;
@@ -38,91 +39,87 @@ export default function IngredientFormRow({
     };
 
     return (
-        <View style={styles.row}>
-            <View style={styles.flexItem}>
-                <ProductAutocomplete
-                    productsDb={productsDb}
-                    value={ingredient.name}
-                    onChange={(val) => handleChange("name", val)}
-                    onClick={(val) => handleChange("name", val)}
-                    error={errors.name}
-                />
+        <View style={styles.outerContainer}>
+
+            <View style={styles.container}>
+
+
+                <View>
+
+                    <View >
+                        <ProductAutocomplete
+                            productsDb={productsDb}
+                            value={ingredient.name}
+                            onChange={(val) => handleChange("name", val)}
+                            onClick={(val) => handleChange("name", val)}
+                            error={errors.name}
+                        />
+                    </View>
+                    <View style={styles.rowBottom}>
+                        <View style={styles.quantityWrapper}>
+                            <Input
+                                value={ingredient.quantity.toString()}
+                                onChangeText={(text) => handleChange("quantity", Number(text))}
+                                placeholder="Ilość"
+                                keyboardType="numeric"
+                                error={errors.quantity}
+                            />
+                        </View>
+                        <View style={styles.unitWrapper}>
+                            <Select
+                                value={ingredient.unit}
+                                options={UNITS.map(u => ({label: u, value: u}))}
+                                placeholder="Jednostka"
+                                onChange={(val) => handleChange("unit", val)}
+                                error={errors.unit}
+                            />
+                        </View>
+                    </View>
+                </View>
             </View>
 
-            <View style={styles.smallInput}>
-                <TextInput
-                    value={ingredient.quantity.toString()}
-                    onChangeText={(text) => handleChange("quantity", Number(text))}
-                    keyboardType="numeric"
-                    placeholder="Ilość"
-                    style={[styles.input, errors.quantity && styles.inputError]}
-                />
-                {errors.quantity && <Text style={styles.error}>{errors.quantity}</Text>}
+            <View>
+                <TouchableOpacity onPress={() => onRemove(index)} style={styles.removeButton}>
+                    <Text style={styles.removeText}>🗑️</Text>
+                </TouchableOpacity>
             </View>
-
-            <View style={styles.pickerWrapper}>
-                <Picker
-                    selectedValue={ingredient.unit}
-                    onValueChange={(val) => handleChange("unit", val)}
-                >
-                    <Picker.Item label="-- wybierz --" value="" />
-                    {UNITS.map((unit) => (
-                        <Picker.Item key={unit} label={unit} value={unit} />
-                    ))}
-                </Picker>
-                {errors.unit && <Text style={styles.error}>{errors.unit}</Text>}
-            </View>
-
-            <TouchableOpacity onPress={() => onRemove(index)} style={styles.removeButton}>
-                <Text style={styles.removeText}>🗑 Usuń</Text>
-            </TouchableOpacity>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    row: {
-        flexDirection: "row",
-        flexWrap: "wrap",
-        gap: 12,
+    outerContainer: {
+        display: 'flex',
+        flexDirection: 'row',
+    },
+    container: {
         marginBottom: 16,
-        alignItems: "flex-start",
+        display: 'flex',
+        flexWrap: 'nowrap',
+        flexGrow: 1,
     },
-    flexItem: {
+    fullInput: {
         flex: 1,
-        minWidth: 120,
-    },
-    smallInput: {
-        width: 80,
-    },
-    input: {
-        borderWidth: 1,
-        borderColor: "#ccc",
-        borderRadius: 8,
-        padding: 10,
-    },
-    inputError: {
-        borderColor: "#dc2626",
-    },
-    pickerWrapper: {
-        width: 140,
-        borderWidth: 1,
-        borderColor: "#ccc",
-        borderRadius: 8,
-        backgroundColor: "#f9f9f9",
-        paddingHorizontal: Platform.OS === "android" ? 4 : 0,
-    },
-    error: {
-        color: "#dc2626",
-        fontSize: 12,
-        marginTop: 4,
+        marginRight: 12,
+        width: '100%',
     },
     removeButton: {
-        paddingVertical: 10,
-        paddingHorizontal: 12,
+        padding: 8,
     },
     removeText: {
         color: "#ef4444",
-        fontWeight: "500",
+        fontSize: 18,
+    },
+    rowBottom: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginTop: 8,
+    },
+    quantityWrapper: {
+        flex: 1,
+        marginRight: 12,
+    },
+    unitWrapper: {
+        flex: 1,
     },
 });

@@ -1,17 +1,11 @@
 // components/expenses/ExpenseFilters.tsx
+import { productsDb } from '../../data/productsDb';
 
 import { StyleSheet, View } from "react-native";
 import Input from "../ui/Input";
 import Select from "../ui/Select";
 
-const CATEGORY_OPTIONS = [
-    { label: "-- wszystkie --", value: "" },
-    { label: "Żywność", value: "żywność" },
-    { label: "Samochód", value: "samochód" },
-    { label: "Rozrywka", value: "rozrywka" },
-    { label: "Chemia", value: "chemia" },
-    { label: "Inne", value: "inne" },
-];
+const CATEGORY_OPTIONS = Object.keys(productsDb).map(obj => ({ label: obj, value: obj }));
 
 const SORT_OPTIONS = [
     { label: "Kategoria (A-Z)", value: "category_asc" },
@@ -48,7 +42,7 @@ export default function ExpenseFilters({
             <Select
                 label="Kategoria"
                 value={filterCategory}
-                options={CATEGORY_OPTIONS.map((o) => o.value)}
+                options={CATEGORY_OPTIONS}
                 onChange={onFilterCategoryChange}
                 placeholder="-- wszystkie --"
             />
@@ -56,7 +50,7 @@ export default function ExpenseFilters({
             <Select
                 label="Sortowanie"
                 value={sortOption}
-                options={SORT_OPTIONS.map((o) => o.value)}
+                options={SORT_OPTIONS}
                 onChange={onSortOptionChange}
                 placeholder="Wybierz..."
             />

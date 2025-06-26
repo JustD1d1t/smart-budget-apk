@@ -3,9 +3,11 @@ import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
     ActivityIndicator,
+    Modal,
     ScrollView,
     StyleSheet,
     Text,
+    TouchableOpacity,
     View,
 } from "react-native";
 import ExpenseFilters from "../../components/expenses/ExpenseFilters";
@@ -14,30 +16,17 @@ import Button from "../../components/ui/Button";
 import { useExpensesStore } from "../../stores/expensesStore";
 import { useUserStore } from "../../stores/userStore";
 
-const CATEGORIES = ["", "żywność", "samochód", "rozrywka", "chemia", "inne"];
-const SORT_OPTIONS = [
-    { label: "Kategoria (A-Z)", value: "category_asc" },
-    { label: "Kategoria (Z-A)", value: "category_desc" },
-    { label: "Data (najnowsze)", value: "date_desc" },
-    { label: "Data (najstarsze)", value: "date_asc" },
-    { label: "Kwota (rosnąco)", value: "amount_asc" },
-    { label: "Kwota (malejąco)", value: "amount_desc" },
-];
-
 function formatDateLocal(date: Date): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
 }
 
 function getStartAndEndOfMonth(date: Date) {
     const start = new Date(date.getFullYear(), date.getMonth(), 1);
     const end = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-    return {
-        start: formatDateLocal(start),
-        end: formatDateLocal(end),
-    };
+    return { start: formatDateLocal(start), end: formatDateLocal(end) };
 }
 
 export default function ExpensesListPage() {
@@ -47,10 +36,11 @@ export default function ExpensesListPage() {
 
     const [filterCategory, setFilterCategory] = useState("");
     const [sortOption, setSortOption] = useState("date_desc");
-
     const { start, end } = getStartAndEndOfMonth(new Date());
     const [startDate, setStartDate] = useState(start);
     const [endDate, setEndDate] = useState(end);
+
+    const [filtersOpen, setFiltersOpen] = useState(false);
 
     useEffect(() => {
         if (user?.id) {
@@ -62,7 +52,6 @@ export default function ExpensesListPage() {
         const filtered = filterCategory
             ? expenses.filter((e) => e.category === filterCategory)
             : expenses;
-
         return [...filtered].sort((a, b) => {
             switch (sortOption) {
                 case "category_asc":
@@ -70,9 +59,13 @@ export default function ExpensesListPage() {
                 case "category_desc":
                     return (b.category || "").localeCompare(a.category || "");
                 case "date_asc":
-                    return new Date(a.date).getTime() - new Date(b.date).getTime();
+                    return (
+                        new Date(a.date).getTime() - new Date(b.date).getTime()
+                    );
                 case "date_desc":
-                    return new Date(b.date).getTime() - new Date(a.date).getTime();
+                    return (
+                        new Date(b.date).getTime() - new Date(a.date).getTime()
+                    );
                 case "amount_asc":
                     return a.amount - b.amount;
                 case "amount_desc":
@@ -88,72 +81,113 @@ export default function ExpensesListPage() {
         await deleteExpense(id, user.id);
     };
 
-    const handlePress = (id: string) => {
-        router.push(`/expenses/${id}`);
-    };
-
     return (
-        <ScrollView contentContainerStyle={styles.container}>
-            <Text style={styles.title}>📋 Lista wydatków</Text>
-
-            <ExpenseFilters
-                filterCategory={filterCategory}
-                onFilterCategoryChange={setFilterCategory}
-                sortOption={sortOption}
-                onSortOptionChange={setSortOption}
-                startDate={startDate}
-                endDate={endDate}
-                onStartDateChange={setStartDate}
-                onEndDateChange={setEndDate}
-                categories={CATEGORIES}
-                sortOptions={SORT_OPTIONS}
-            />
-
-            {loading ? (
-                <ActivityIndicator size="large" />
-            ) : (
-                <View style={styles.list}>
-                    <View style={styles.header}>
-                        <Text style={styles.headerText}>Sklep</Text>
-                        <Text style={styles.headerText}>Kwota</Text>
-                        <Text style={styles.headerText}>Data</Text>
-                        <Text style={styles.headerText}>Kategoria</Text>
+        <>
+            <ScrollView contentContainerStyle={styles.container}>
+                <View style={styles.headerRow}>
+                    <Text style={styles.title}>📋 Lista wydatków</Text>
+                    <View style={styles.headerButtons}>
+                        <TouchableOpacity
+                            onPress={() => setFiltersOpen(true)}
+                            style={styles.filterButton}
+                        >
+                            <Text style={styles.filterIcon}>⚙️</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => router.push("/expenses/new")}
+                            style={styles.filterButton}
+                        >
+                            <Text style={styles.filterIcon}>➕</Text>
+                        </TouchableOpacity>
                     </View>
-
-                    {visibleExpenses.map((exp) => (
-                        <ExpenseItem
-                            key={exp.id}
-                            expense={exp}
-                            onPress={() => handlePress(exp.id)}
-                            onEdit={exp.user_id === user?.id ? () => handlePress(exp.id) : undefined}
-                            onDelete={exp.user_id === user?.id ? () => handleDelete(exp.id) : undefined}
-                        />
-                    ))}
-
-                    {visibleExpenses.length === 0 && (
-                        <Text style={styles.empty}>Brak zapisanych wydatków.</Text>
-                    )}
                 </View>
-            )}
 
-            <Button onPress={() => router.push("/expenses/new")} variant="confirm">
-                ➕ Dodaj nowy wydatek
-            </Button>
-        </ScrollView>
+                {loading ? (
+                    <ActivityIndicator size="large" />
+                ) : (
+                    <View style={styles.list}>
+                        <View style={styles.columns}>
+                            <Text style={styles.colText}>Sklep</Text>
+                            <Text style={styles.colText}>Kwota</Text>
+                            <Text style={styles.colText}>Data</Text>
+                            <Text style={styles.colText}>Kategoria</Text>
+                        </View>
+
+                        {visibleExpenses.map((exp) => (
+                            <ExpenseItem
+                                key={exp.id}
+                                expense={exp}
+                                onPress={() => router.push(`/expenses/${exp.id}`)}
+                            />
+                        ))}
+
+                        {visibleExpenses.length === 0 && (
+                            <Text style={styles.empty}>Brak zapisanych wydatków.</Text>
+                        )}
+                    </View>
+                )}
+            </ScrollView>
+
+            <Modal
+                visible={filtersOpen}
+                animationType="slide"
+                onRequestClose={() => setFiltersOpen(false)}
+            >
+                <View style={styles.modalContainer}>
+                    <Text style={styles.modalTitle}>Filtry</Text>
+                    <ExpenseFilters
+                        filterCategory={filterCategory}
+                        onFilterCategoryChange={setFilterCategory}
+                        sortOption={sortOption}
+                        onSortOptionChange={setSortOption}
+                        startDate={startDate}
+                        endDate={endDate}
+                        onStartDateChange={setStartDate}
+                        onEndDateChange={setEndDate}
+                    />
+                    <Button
+                        onPress={() => setFiltersOpen(false)}
+                        variant="neutral"
+                        style={styles.modalClose}
+                    >
+                        Zamknij
+                    </Button>
+                </View>
+            </Modal>
+        </>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { padding: 16, gap: 16 },
+    container: { padding: 16, gap: 8 },
+    headerRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+    },
     title: { fontSize: 20, fontWeight: "bold" },
-    list: { gap: 8 },
-    header: {
+    filterButton: {
+        padding: 6,
+    },
+    filterIcon: {
+        fontSize: 24,
+    },
+    list: { gap: 8, marginTop: 12 },
+    columns: {
         flexDirection: "row",
         justifyContent: "space-between",
         paddingBottom: 4,
         borderBottomWidth: 1,
         borderColor: "#ccc",
     },
-    headerText: { flex: 1, fontWeight: "600", fontSize: 12 },
-    empty: { color: "#888" },
+    colText: { flex: 1, fontWeight: "600", fontSize: 12 },
+    empty: { color: "#888", marginTop: 20, textAlign: "center" },
+    modalContainer: {
+        flex: 1,
+        padding: 20,
+        backgroundColor: "#fafafa",
+    },
+    modalTitle: { fontSize: 18, fontWeight: "600", marginBottom: 12 },
+    modalClose: { marginTop: 20 },
+    headerButtons: { display: 'flex', flexDirection: 'row', gap: 8}
 });

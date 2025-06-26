@@ -14,6 +14,11 @@ export default function PantryListPage() {
     const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
     const router = useRouter();
 
+    const showToast = (message: string, type: 'success' | 'error' = 'error') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 3000);
+    };
+
     const { pantries, loading, fetchPantries, addPantry, removePantry, renamePantry } =
         usePantriesStore();
 
@@ -30,26 +35,26 @@ export default function PantryListPage() {
 
         const result = await addPantry(newPantryName.trim());
         if (!result.success) {
-            setToast({ message: result.error || "Błąd podczas dodawania spiżarni.", type: "error" });
+            showToast(result.error || "Błąd podczas dodawania spiżarni.", "error");
             return;
         }
 
         setNewPantryName("");
-        setToast({ message: "Spiżarnia dodana pomyślnie!", type: "success" });
+        showToast("Spiżarnia dodana pomyślnie!", "success");
     };
 
     const handleRemovePantry = async (id: string) => {
         await removePantry(id);
-        setToast({ message: "Usunięto spiżarnię", type: "success" });
+        showToast("Usunięto spiżarnię", "success");
     };
 
     const handleRenamePantry = async (id: string, newName: string) => {
         if (!newName.trim()) {
-            setToast({ message: "Nazwa nie może być pusta.", type: "error" });
+            showToast("Nazwa nie może być pusta.", "error");
             return;
         }
         await renamePantry(id, newName.trim());
-        setToast({ message: "Zmieniono nazwę spiżarni", type: "success" });
+        showToast("Zmieniono nazwę spiżarni", "success");
     };
 
     return (
@@ -72,7 +77,7 @@ export default function PantryListPage() {
                 error={nameError || undefined}
             />
 
-            <Button onPress={handleAddPantry} variant="confirm" style={styles.addBtn}>
+            <Button onPress={handleAddPantry} variant="confirm">
                 Dodaj spiżarnię
             </Button>
 
@@ -88,8 +93,6 @@ export default function PantryListPage() {
                         <PantryItem
                             pantry={item}
                             onOpen={() => router.push(`/pantries/${item.id}`)}
-                            onRemove={item.isOwner ? handleRemovePantry : undefined}
-                            onRename={item.isOwner ? (newName) => handleRenamePantry(item.id, newName) : undefined}
                         />
                     )}
                     contentContainerStyle={styles.list}
@@ -102,8 +105,7 @@ export default function PantryListPage() {
 const styles = StyleSheet.create({
     container: { flex: 1, gap: 12, padding: 20, backgroundColor: "#fff" },
     title: { fontSize: 20, fontWeight: "bold", marginBottom: 16 },
-    addBtn: { marginBottom: 20 },
     loader: { marginTop: 20 },
     empty: { textAlign: "center", color: "#888", marginTop: 20 },
-    list: { paddingBottom: 20 },
+    list: { gap: 8 },
 });

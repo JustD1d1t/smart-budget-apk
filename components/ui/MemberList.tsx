@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { useFriendsStore } from '../../stores/friendsStore';
-import Accordion from './Accordion';
 import Button from './Button';
 
 export interface Member {
@@ -10,12 +9,13 @@ export interface Member {
 }
 
 interface Props {
+    isOwner: boolean;
     members: Member[];
     onAddFriend?: (friendEmail: string) => void;
     onRemoveFriend?: (friendEmail: string) => void;
 }
 
-export default function MemberList({ members = [], onAddFriend, onRemoveFriend }: Props) {
+export default function MemberList({ isOwner, members = [], onAddFriend, onRemoveFriend }: Props) {
     const { friends, fetchFriends } = useFriendsStore();
     const [expanded, setExpanded] = useState(false);
 
@@ -29,60 +29,53 @@ export default function MemberList({ members = [], onAddFriend, onRemoveFriend }
         .map(f => ({ id: f.requester_id === f.recipient_id ? f.id : f.id, email: f.user_email }));
 
     return (
-        <Accordion
-            title="Członkowie"
-            expanded={expanded}
-            onToggle={() => setExpanded(prev => !prev)}
-        >
-            <View style={styles.content}>
-                {/* Sekcja: Znajomi */}
-                <Text style={styles.sectionTitle}>Znajomi</Text>
-                {acceptedFriends.length > 0 ? (
-                    <FlatList
-                        data={acceptedFriends}
-                        keyExtractor={item => item.id}
-                        scrollEnabled={false}
-                        renderItem={({ item }) => {
-                            const isCollaborator = members.some(m => m.email === item.email);
-                            return (
-                                <View style={styles.memberRow}>
-                                    <Text style={styles.email}>{item.email}</Text>
-                                    {onAddFriend && !isCollaborator && (
-                                        <Button size="sm" variant="confirm" onPress={() => onAddFriend(item.email)}>
-                                            Dodaj
-                                        </Button>
-                                    )}
-                                </View>
-                            );
-                        }}
-                    />
-                ) : (
-                    <Text style={styles.emptyText}>Brak znajomych</Text>
-                )}
-
-                {/* Sekcja: Współtwórcy */}
-                <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Współtwórcy</Text>
-                {members.length > 0 ? (
-                    <FlatList
-                        data={members}
-                        keyExtractor={item => item.id}
-                        scrollEnabled={false}
-                        renderItem={({ item }) => (
+        <View style={styles.content}>
+            {/* Sekcja: Znajomi */}
+            <Text style={styles.sectionTitle}>Znajomi</Text>
+            {acceptedFriends.length > 0 ? (
+                <FlatList
+                    data={acceptedFriends}
+                    keyExtractor={item => item.id}
+                    scrollEnabled={false}
+                    renderItem={({ item }) => {
+                        return (
                             <View style={styles.memberRow}>
                                 <Text style={styles.email}>{item.email}</Text>
-                                {onRemoveFriend && (
-                                    <Button size="sm" variant="danger" onPress={() => onRemoveFriend(item.email)}>
-                                        Usuń
+                                {onAddFriend && isOwner && (
+                                    <Button size="sm" variant="confirm" onPress={() => onAddFriend(item.email)}>
+                                        Dodaj
                                     </Button>
                                 )}
                             </View>
-                        )}
-                    />
-                ) : (
-                    <Text style={styles.emptyText}>Brak współtwórców</Text>
-                )}
-            </View>
-        </Accordion>
+                        );
+                    }}
+                />
+            ) : (
+                <Text style={styles.emptyText}>Brak znajomych</Text>
+            )}
+
+            {/* Sekcja: Współtwórcy */}
+            <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Współtwórcy</Text>
+            {members.length > 0 ? (
+                <FlatList
+                    data={members}
+                    keyExtractor={item => item.id}
+                    scrollEnabled={false}
+                    renderItem={({ item }) => (
+                        <View style={styles.memberRow}>
+                            <Text style={styles.email}>{item.email}</Text>
+                            {onRemoveFriend && isOwner && (
+                                <Button size="sm" variant="danger" onPress={() => onRemoveFriend(item.email)}>
+                                    Usuń
+                                </Button>
+                            )}
+                        </View>
+                    )}
+                />
+            ) : (
+                <Text style={styles.emptyText}>Brak współtwórców</Text>
+            )}
+        </View>
     );
 }
 

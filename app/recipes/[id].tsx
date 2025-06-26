@@ -4,10 +4,13 @@ import { useEffect, useState } from "react";
 import {
     ActivityIndicator,
     FlatList,
+    Modal,
     StyleSheet,
     Text,
+    TouchableOpacity,
     View,
 } from "react-native";
+import EditRecipeModal from "../../components/recipes/EditRecipeModal";
 import Button from "../../components/ui/Button";
 import { supabase } from "../../lib/supabaseClient";
 
@@ -29,6 +32,7 @@ export default function RecipeDetailsPage() {
     const router = useRouter();
     const [recipe, setRecipe] = useState<Recipe | null>(null);
     const [loading, setLoading] = useState(true);
+    const [editOpen, setEditOpen] = useState(false);
 
     useEffect(() => {
         const fetchRecipe = async () => {
@@ -72,7 +76,18 @@ export default function RecipeDetailsPage() {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>{recipe.name}</Text>
+
+            <View style={styles.header}>
+                <Text style={styles.title}>{recipe.name}</Text>
+
+                <View style={styles.headerActions}>
+                    <TouchableOpacity
+                        onPress={() => setEditOpen(true)}
+                    >
+                        <Text style={styles.filterIcon}>✏️</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
 
             {recipe.description && (
                 <Text style={styles.description}>{recipe.description}</Text>
@@ -88,10 +103,15 @@ export default function RecipeDetailsPage() {
                     </Text>
                 )}
             />
+            <Modal
+                visible={editOpen}
+                animationType="slide"
+                onRequestClose={() => setEditOpen(false)}
+            >
 
-            <View style={styles.buttonWrapper}>
-                <Button onPress={() => router.back()}>⬅️ Wróć</Button>
-            </View>
+                <EditRecipeModal />
+                <Button onPress={() => setEditOpen(false)} variant="neutral">Zamknij</Button>
+            </Modal>
         </View>
     );
 }
@@ -134,5 +154,11 @@ const styles = StyleSheet.create({
     },
     buttonWrapper: {
         marginTop: 24,
+    },
+    memberIcon: { fontSize: 24 },
+    header: { display: 'flex', flexDirection: 'row', justifyContent: 'space-between' },
+    headerActions: { display: 'flex', flexDirection: 'row', gap: 8 },
+    filterIcon: {
+        fontSize: 24,
     },
 });

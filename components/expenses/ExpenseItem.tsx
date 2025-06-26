@@ -1,6 +1,5 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Expense } from '../../stores/expensesStore';
-import Button from '../ui/Button';
 
 interface Props {
     expense: Expense;
@@ -12,8 +11,6 @@ interface Props {
 export default function ExpenseItem({
     expense,
     onPress,
-    onEdit,
-    onDelete,
 }: Props) {
     return (
         <TouchableOpacity onPress={onPress} style={styles.container}>
@@ -22,10 +19,6 @@ export default function ExpenseItem({
                 <Text style={styles.amount}>{expense.amount.toFixed(2)} zł</Text>
                 <Text style={styles.date}>{expense.date}</Text>
                 <Text style={styles.category}>{expense.category}</Text>
-            </View>
-            <View style={styles.actions}>
-                {onEdit && <Button onPress={onEdit}>✏️</Button>}
-                {onDelete && <Button onPress={onDelete} variant="danger">🗑️</Button>}
             </View>
         </TouchableOpacity>
     );
@@ -46,11 +39,10 @@ const styles = StyleSheet.create({
     row: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 8,
     },
     store: { flex: 1, fontWeight: '500' },
-    amount: { width: 80, textAlign: 'right' },
-    date: { width: 80, textAlign: 'right' },
-    category: { width: 80, textAlign: 'right' },
+    amount: { flex: 1, },
+    date: { flex: 1, },
+    category: { flex: 1, },
     actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },
 });

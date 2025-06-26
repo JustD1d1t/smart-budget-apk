@@ -1,7 +1,7 @@
 // app/recipes/index.tsx
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, FlatList, StyleSheet, Text, View } from "react-native";
+import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Button from "../../components/ui/Button";
 import ShoppingListSelectModal from "../../components/ui/ShoppingListSelectModal";
 import { supabase } from "../../lib/supabaseClient";
@@ -109,24 +109,11 @@ export default function RecipesListPage() {
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
           renderItem={({ item: recipe }) => (
-            <View style={styles.card}>
-              <Text style={styles.recipeName}>{recipe.name}</Text>
-              {recipe.description ? (
-                <Text style={styles.description}>{recipe.description}</Text>
-              ) : null}
-
-              <View style={styles.actions}>
-                <Button onPress={() => handleAddToShoppingList(recipe)}>
-                  ➕ Dodaj do listy
-                </Button>
-                <Button onPress={() => deleteRecipe(recipe.id)}>
-                  🗑️ Usuń
-                </Button>
-                <Button onPress={() => router.push(`/recipes/${recipe.id}`)}>
-                  📖 Otwórz przepis
-                </Button>
+            <TouchableOpacity onPress={() => router.push(`/recipes/${recipe.id}`)}>
+              <View style={styles.card}>
+                <Text style={styles.recipeName}>{recipe.name}</Text>
               </View>
-            </View>
+            </TouchableOpacity>
           )}
         />
       )}
@@ -163,24 +150,18 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   list: {
-    gap: 12,
+    gap: 8,
   },
   card: {
     backgroundColor: "#f9f9f9",
     padding: 16,
     borderRadius: 8,
-    marginBottom: 12,
     borderColor: "#e5e7eb",
     borderWidth: 1,
   },
   recipeName: {
     fontSize: 18,
     fontWeight: "600",
-  },
-  description: {
-    color: "#6b7280",
-    marginTop: 4,
-    marginBottom: 12,
   },
   actions: {
     gap: 8,

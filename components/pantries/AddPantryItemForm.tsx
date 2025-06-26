@@ -1,13 +1,14 @@
 // components/pantries/AddPantryItemForm.tsx
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { productsDb } from '../../data/productsDb';
 import { supabase } from '../../lib/supabaseClient';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
 import Toast from '../ui/Toast';
 
-const CATEGORIES = ['żywność', 'chemia', 'napoje', 'mrożonki', 'inne'];
+const CATEGORIES = Object.keys(productsDb);
 const UNITS = ['szt', 'kg'];
 
 type PantryItem = {
@@ -79,7 +80,7 @@ export default function AddPantryItemForm({ pantryId, onItemAdded }: Props) {
             <Select
                 label="Kategoria"
                 value={category}
-                options={CATEGORIES}
+                options={CATEGORIES.map(c => ({ label: c, value: c }))}
                 onChange={setCategory}
                 placeholder="Wybierz kategorię"
                 error={errors.category}
@@ -95,7 +96,7 @@ export default function AddPantryItemForm({ pantryId, onItemAdded }: Props) {
                 <Select
                     label="Jednostka"
                     value={unit}
-                    options={UNITS}
+                    options={UNITS.map(u => ({ label: u, value: u }))}
                     onChange={setUnit}
                     placeholder="-- wybierz --"
                     error={errors.unit}

@@ -12,68 +12,98 @@ export type Friend = {
 
 type FriendsStore = {
   friends: Friend[];
-  fetchFriends: () => Promise<void>;
-  sendInvite: (email: string) => Promise<void>;
-  acceptInvite: (id: string) => Promise<void>;
-  removeFriend: (id: string) => Promise<void>;
+  fetchFriends: () => Promise<{ success: boolean; error?: string }>;
+  sendInvite: (email: string) => Promise<{ success: boolean; error?: string }>;
+  acceptInvite: (id: string) => Promise<{ success: boolean; error?: string }>;
+  removeFriend: (id: string) => Promise<{ success: boolean; error?: string }>;
 };
 
 export const useFriendsStore = create<FriendsStore>((set, get) => ({
   friends: [],
 
   fetchFriends: async () => {
-    const user = (await supabase.auth.getUser()).data.user;
-    if (!user) return;
+    try {
+      const userResp = await supabase.auth.getUser();
+      const user = userResp.data.user;
+      if (!user) throw new Error("Brak zalogowanego użytkownika");
 
-    const { data, error } = await supabase
-      .from("friends")
-      .select(
-        `
-      *,
-      recipient:recipient_id ( email ),
-      requester:requester_id ( email )
-    `
-      )
-      .or(`requester_id.eq.${user.id},recipient_id.eq.${user.id}`);
+      const { data, error } = await supabase
+        .from("friends")
+        .select(
+          `*,
+        recipient:recipient_id ( email ),
+        requester:requester_id ( email )`
+        )
+        .or(`requester_id.eq.${user.id},recipient_id.eq.${user.id}`);
 
-    if (!error && data) {
-      const enriched = data.map((row) => ({
-        ...row,
+      if (error) throw error;
+      const enriched = data!.map((row: any) => ({
+        id: row.id,
+        requester_id: row.requester_id,
+        recipient_id: row.recipient_id,
+        status: row.status,
+        created_at: row.created_at,
         user_email:
           row.requester_id === user.id
-            ? row.recipient?.email
-            : row.requester?.email,
+            ? row.recipient.email
+            : row.requester.email,
       }));
       set({ friends: enriched });
+      return { success: true };
+    } catch (e: any) {
+      return { success: false, error: e.message };
     }
   },
 
   sendInvite: async (email) => {
-    const { data: userToInvite } = await supabase
-      .from("users")
-      .select("id")
-      .eq("email", email)
-      .single();
+    try {
+      const { data: userToInvite, error: userErr } = await supabase
+        .from("users")
+        .select("id")
+        .eq("email", email)
+        .single();
+      if (userErr || !userToInvite)
+        throw new Error("Nie znaleziono użytkownika");
 
-    if (!userToInvite) throw new Error("Nie znaleziono użytkownika");
+      const userResp = await supabase.auth.getUser();
+      const user = userResp.data.user;
+      if (!user) throw new Error("Brak zalogowanego użytkownika");
 
-    const user = (await supabase.auth.getUser()).data.user;
+      const { error: insertErr } = await supabase.from("friends").insert({
+        requester_id: user.id,
+        recipient_id: userToInvite.id,
+      });
+      if (insertErr) throw insertErr;
 
-    await supabase.from("friends").insert({
-      requester_id: user.id,
-      recipient_id: userToInvite.id,
-    });
-
-    await get().fetchFriends();
+      await get().fetchFriends();
+      return { success: true };
+    } catch (e: any) {
+      return { success: false, error: e.message };
+    }
   },
 
   acceptInvite: async (id) => {
-    await supabase.from("friends").update({ status: "accepted" }).eq("id", id);
-    await get().fetchFriends();
+    try {
+      const { error } = await supabase
+        .from("friends")
+        .update({ status: "accepted" })
+        .eq("id", id);
+      if (error) throw error;
+      await get().fetchFriends();
+      return { success: true };
+    } catch (e: any) {
+      return { success: false, error: e.message };
+    }
   },
 
   removeFriend: async (id) => {
-    await supabase.from("friends").delete().eq("id", id);
-    await get().fetchFriends();
+    try {
+      const { error } = await supabase.from("friends").delete().eq("id", id);
+      if (error) throw error;
+      await get().fetchFriends();
+      return { success: true };
+    } catch (e: any) {
+      return { success: false, error: e.message };
+    }
   },
 }));
