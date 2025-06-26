@@ -79,19 +79,6 @@ export default function RecipesListPage() {
     setSelectedRecipe(null);
   };
 
-  const deleteRecipe = async (id: string) => {
-    const { error } = await supabase.from("recipes").delete().eq("id", id);
-
-    if (error) {
-      console.error("Błąd podczas usuwania przepisu:", error.message);
-      Alert.alert("Błąd", "Nie udało się usunąć przepisu");
-      return;
-    }
-
-    setRecipes((prev) => prev.filter((r) => r.id !== id));
-    Alert.alert("Usunięto", "Przepis został usunięty");
-  };
-
   return (
     <View style={styles.container}>
       <View style={styles.header}>

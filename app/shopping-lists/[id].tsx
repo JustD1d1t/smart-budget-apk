@@ -1,4 +1,3 @@
-// app/shopping-lists/[id].tsx
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
@@ -54,6 +53,7 @@ export default function ShoppingListDetailsPage() {
         fetchLists,
         moveBoughtToPantry,
         addItem,
+        removeList,     
     } = useShoppingListStore();
 
     useEffect(() => {
@@ -97,6 +97,17 @@ export default function ShoppingListDetailsPage() {
         success ? showToast('Usunięto współtwórcę', 'success') : showToast(error!, 'error');
     };
 
+    const handleDeleteList = async () => {
+        if (!id) return;
+        const { success, error } = await removeList(id);
+        if (success) {
+            showToast('Usunięto listę zakupów', 'success');
+            router.replace('/shopping-lists');
+        } else {
+            showToast(error || 'Błąd usuwania listy', 'error');
+        }
+    };
+
     const filteredItems = items
         .filter(item => filterCategory === 'wszystkie' || item.category === filterCategory)
         .sort((a, b) =>
@@ -113,7 +124,9 @@ export default function ShoppingListDetailsPage() {
                 <Text style={styles.title}>{selectedList?.name}</Text>
 
                 <View style={styles.headerActions}>
-
+                    <TouchableOpacity onPress={handleDeleteList}>
+                        <Text style={styles.deleteIcon}>🗑️</Text>
+                    </TouchableOpacity>
                     <TouchableOpacity onPress={() => setShowMembers(true)}>
                         <Text style={styles.memberIcon}>👤</Text>
                     </TouchableOpacity>
@@ -154,14 +167,14 @@ export default function ShoppingListDetailsPage() {
                     <Button onPress={deleteBoughtItems} variant="danger">
                         Usuń kupione
                     </Button>
-                    {pantries.length > 0 &&
-                        (<Button
+                    {pantries.length > 0 && (
+                        <Button
                             onPress={() => setShowPantryModal(true)}
                             variant="confirm"
                         >
                             Przenieś do spiżarni
-                        </Button>)
-                    }
+                        </Button>
+                    )}
                 </View>
             )}
 
@@ -210,6 +223,7 @@ const styles = StyleSheet.create({
     actions: { gap: 8 },
     modal: { flex: 1, padding: 16, backgroundColor: '#fff' },
     memberIcon: { fontSize: 24 },
-    header: { display: 'flex', flexDirection: 'row', justifyContent: 'space-between' },
+    deleteIcon: { fontSize: 24, color: '#dc2626', marginRight: 8 },
+    header: { display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     headerActions: { display: 'flex', flexDirection: 'row', gap: 8 }
 });
