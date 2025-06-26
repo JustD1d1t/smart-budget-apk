@@ -1,4 +1,3 @@
-// app/recipes/[id].tsx
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -12,6 +11,7 @@ import {
 } from "react-native";
 import EditRecipeModal from "../../components/recipes/EditRecipeModal";
 import Button from "../../components/ui/Button";
+import Toast from "../../components/ui/Toast";
 import { supabase } from "../../lib/supabaseClient";
 
 interface Ingredient {
@@ -28,34 +28,43 @@ interface Recipe {
 }
 
 export default function RecipeDetailsPage() {
-    const { id } = useLocalSearchParams();
+    const { id } = useLocalSearchParams<{ id: string }>();
     const router = useRouter();
     const [recipe, setRecipe] = useState<Recipe | null>(null);
     const [loading, setLoading] = useState(true);
     const [editOpen, setEditOpen] = useState(false);
+    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
     useEffect(() => {
         const fetchRecipe = async () => {
-            if (!id || typeof id !== "string") return;
-
+            if (!id) return;
+            setLoading(true);
             const { data, error } = await supabase
                 .from("recipes")
                 .select("*")
                 .eq("id", id)
                 .single();
-
             if (error) {
-                console.error("Błąd podczas pobierania przepisu:", error.message);
+                setToast({ message: "Nie udało się pobrać przepisu.", type: 'error' });
                 setRecipe(null);
             } else {
                 setRecipe(data);
             }
-
             setLoading(false);
         };
-
         fetchRecipe();
     }, [id]);
+
+    const handleDelete = async () => {
+        if (!id) return;
+        const { error } = await supabase.from('recipes').delete().eq('id', id);
+        if (error) {
+            setToast({ message: 'Błąd usuwania przepisu', type: 'error' });
+        } else {
+            setToast({ message: 'Przepis usunięty', type: 'success' });
+            router.replace('/recipes');
+        }
+    };
 
     if (loading) {
         return (
@@ -76,22 +85,20 @@ export default function RecipeDetailsPage() {
 
     return (
         <View style={styles.container}>
-
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
             <View style={styles.header}>
                 <Text style={styles.title}>{recipe.name}</Text>
-
                 <View style={styles.headerActions}>
-                    <TouchableOpacity
-                        onPress={() => setEditOpen(true)}
-                    >
-                        <Text style={styles.filterIcon}>✏️</Text>
+                    <TouchableOpacity onPress={() => setEditOpen(true)}>
+                        <Text style={styles.icon}>✏️</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={handleDelete} style={styles.deleteBtn}>
+                        <Text style={styles.icon}>🗑️</Text>
                     </TouchableOpacity>
                 </View>
             </View>
 
-            {recipe.description && (
-                <Text style={styles.description}>{recipe.description}</Text>
-            )}
+            {recipe.description && <Text style={styles.description}>{recipe.description}</Text>}
 
             <Text style={styles.sectionTitle}>🧂 Składniki</Text>
             <FlatList
@@ -103,13 +110,9 @@ export default function RecipeDetailsPage() {
                     </Text>
                 )}
             />
-            <Modal
-                visible={editOpen}
-                animationType="slide"
-                onRequestClose={() => setEditOpen(false)}
-            >
 
-                <EditRecipeModal />
+            <Modal visible={editOpen} animationType="slide" onRequestClose={() => setEditOpen(false)}>
+                <EditRecipeModal recipeId={id!} isOpen={editOpen} onClose={() => setEditOpen(false)} />
                 <Button onPress={() => setEditOpen(false)} variant="neutral">Zamknij</Button>
             </Modal>
         </View>
@@ -120,27 +123,26 @@ const styles = StyleSheet.create({
     container: {
         padding: 16,
         maxWidth: 640,
-        width: "100%",
-        alignSelf: "center",
+        width: '100%',
+        alignSelf: 'center',
     },
     center: {
         flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
+        justifyContent: 'center',
+        alignItems: 'center',
         padding: 16,
     },
     title: {
         fontSize: 22,
-        fontWeight: "bold",
-        marginBottom: 8,
+        fontWeight: 'bold',
     },
     description: {
-        color: "#6b7280",
-        marginBottom: 16,
+        color: '#6b7280',
+        marginVertical: 16,
     },
     sectionTitle: {
         fontSize: 18,
-        fontWeight: "600",
+        fontWeight: '600',
         marginBottom: 8,
     },
     ingredient: {
@@ -149,16 +151,25 @@ const styles = StyleSheet.create({
     },
     empty: {
         fontSize: 16,
-        color: "#6b7280",
+        color: '#6b7280',
         marginBottom: 12,
     },
-    buttonWrapper: {
-        marginTop: 24,
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 8,
     },
-    memberIcon: { fontSize: 24 },
-    header: { display: 'flex', flexDirection: 'row', justifyContent: 'space-between' },
-    headerActions: { display: 'flex', flexDirection: 'row', gap: 8 },
-    filterIcon: {
+    headerActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+    },
+    icon: {
         fontSize: 24,
+        marginHorizontal: 8,
+    },
+    deleteBtn: {
+        marginLeft: 8,
     },
 });
