@@ -31,7 +31,6 @@ export default function IngredientFormRow({
     onChange,
     onRemove,
     errors = {},
-    productsDb,
 }: Props) {
     const handleChange = (field: keyof Ingredient, value: string | number) => {
         onChange(index, { ...ingredient, [field]: value });
@@ -56,7 +55,7 @@ export default function IngredientFormRow({
                     <View style={styles.rowBottom}>
                         <View style={styles.quantityWrapper}>
                             <Input
-                                value={ingredient.quantity.toString()}
+                                value={ingredient.quantity?.toString()}
                                 onChangeText={(text) => handleChange("quantity", Number(text))}
                                 placeholder="Ilość"
                                 keyboardType="numeric"
@@ -66,7 +65,7 @@ export default function IngredientFormRow({
                         <View style={styles.unitWrapper}>
                             <Select
                                 value={ingredient.unit}
-                                options={UNITS.map(u => ({label: u, value: u}))}
+                                options={UNITS.map(u => ({ label: u, value: u }))}
                                 placeholder="Jednostka"
                                 onChange={(val) => handleChange("unit", val)}
                                 error={errors.unit}

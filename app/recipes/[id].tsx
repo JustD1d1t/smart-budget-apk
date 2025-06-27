@@ -85,7 +85,7 @@ export default function RecipeDetailsPage() {
 
     return (
         <View style={styles.container}>
-            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+            {toast && <Toast message={toast.message} type={toast.type} />}
             <View style={styles.header}>
                 <Text style={styles.title}>{recipe.name}</Text>
                 <View style={styles.headerActions}>
@@ -112,7 +112,7 @@ export default function RecipeDetailsPage() {
             />
 
             <Modal visible={editOpen} animationType="slide" onRequestClose={() => setEditOpen(false)}>
-                <EditRecipeModal recipeId={id!} isOpen={editOpen} onClose={() => setEditOpen(false)} />
+                <EditRecipeModal />
                 <Button onPress={() => setEditOpen(false)} variant="neutral">Zamknij</Button>
             </Modal>
         </View>

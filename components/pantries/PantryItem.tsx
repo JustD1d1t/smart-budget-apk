@@ -1,11 +1,6 @@
 // components/pantries/PantryItem.tsx
 import { StyleSheet, Text, TouchableOpacity } from "react-native";
-
-interface Pantry {
-    id: string;
-    name: string;
-    isOwner: boolean;
-}
+import type { Pantry } from "../../stores/pantriesStore";
 
 type Props = {
     pantry: Pantry;

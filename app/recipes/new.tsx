@@ -15,11 +15,17 @@ interface Ingredient {
   unit: string;
 }
 
-interface IngredientError {
+type IngredientError = {
   name?: string;
   quantity?: string;
   unit?: string;
-}
+};
+type FormErrors = {
+  name?: string;
+  description?: string;
+  ingredients?: string;
+  ingredientFields: IngredientError[];
+};
 
 export default function NewRecipePage() {
   const { user } = useUserStore();
@@ -30,11 +36,11 @@ export default function NewRecipePage() {
   const [ingredients, setIngredients] = useState<Ingredient[]>([
     { name: "", quantity: 1, unit: "" },
   ]);
-  const [errors, setErrors] = useState({
+  const [errors, setErrors] = useState<FormErrors>({
     name: undefined,
     description: undefined,
     ingredients: undefined,
-    ingredientFields: [] as IngredientError[],
+    ingredientFields: [],
   });
 
   const handleAddIngredient = () => {
@@ -45,6 +51,20 @@ export default function NewRecipePage() {
     }));
   };
 
+  const handleIngredientChange = (index: number, updated: Ingredient) => {
+    setIngredients(prev =>
+      prev.map((ing, i) => (i === index ? updated : ing))
+    );
+  };
+
+  const handleIngredientRemove = (index: number) => {
+    setIngredients(prev => prev.filter((_, i) => i !== index));
+    setErrors(prev => ({
+      ...prev,
+      ingredientFields: prev.ingredientFields.filter((_, i) => i !== index),
+    }));
+  };
+
   const handleSubmit = async () => {
     const trimmedName = name.trim();
     const trimmedDescription = description.trim();
@@ -52,11 +72,11 @@ export default function NewRecipePage() {
 
     const validIngredients = ingredients.filter((i) => i.name.trim() !== "");
 
-    const newErrors = {
+    const newErrors: FormErrors = {
       name: undefined,
       description: undefined,
       ingredients: undefined,
-      ingredientFields: [] as IngredientError[],
+      ingredientFields: [],
     };
 
     if (!trimmedName) newErrors.name = "Nazwa przepisu jest wymagana.";
@@ -68,7 +88,8 @@ export default function NewRecipePage() {
     ingredients.forEach((i, index) => {
       const err: IngredientError = {};
       if (i.name.trim() !== "") {
-        if (isNaN(i.quantity) || i.quantity <= 0) err.quantity = "Podaj poprawną ilość (> 0)";
+        if (isNaN(i.quantity) || i.quantity <= 0)
+          err.quantity = "Podaj poprawną ilość (> 0)";
         if (!i.unit.trim()) err.unit = "Wybierz jednostkę";
       }
       ingredientErrors[index] = err;
@@ -129,7 +150,8 @@ export default function NewRecipePage() {
 
       <IngredientListEditor
         ingredients={ingredients}
-        setIngredients={setIngredients}
+        onRemove={handleIngredientRemove}
+        onChange={handleIngredientChange}
         errors={errors.ingredientFields}
       />
 

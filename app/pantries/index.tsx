@@ -19,7 +19,7 @@ export default function PantryListPage() {
         setTimeout(() => setToast(null), 3000);
     };
 
-    const { pantries, loading, fetchPantries, addPantry, removePantry, renamePantry } =
+    const { pantries, loading, fetchPantries, addPantry } =
         usePantriesStore();
 
     useEffect(() => {
@@ -51,7 +51,6 @@ export default function PantryListPage() {
                 <Toast
                     message={toast.message}
                     type={toast.type}
-                    onClose={() => setToast(null)}
                 />
             )}
 

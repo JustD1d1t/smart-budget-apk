@@ -59,10 +59,11 @@ export default function EditRecipePage() {
     if (!id) return;
     (async () => {
       const { data, error } = await supabase
-        .from<Recipe>("recipes")
+        .from("recipes")
         .select("*")
         .eq("id", id)
-        .single();
+        .single<Recipe>();
+
       if (error || !data) {
         showToast("Nie udało się wczytać przepisu.", "error");
         setRecipe(null);
@@ -161,13 +162,13 @@ export default function EditRecipePage() {
       <Text style={styles.sectionTitle}>🧂 Składniki</Text>
       <IngredientListEditor
         ingredients={ingredients}
-        ingredientErrors={ingredientErrors}
+        errors={ingredientErrors}
         onChange={(idx, updated) => {
           const next = [...ingredients];
           next[idx] = updated;
           setIngredients(next);
         }}
-        onRemove={idx => {
+        onRemove={(idx) => {
           setIngredients(ingredients.filter((_, i) => i !== idx));
           setIngredientErrors(ingredientErrors.filter((_, i) => i !== idx));
         }}
@@ -179,7 +180,7 @@ export default function EditRecipePage() {
         ➕ Dodaj składnik
       </Button>
 
-      <View style={styles.buttonWrapper}>
+      <View>
         <Button onPress={handleSubmit} variant="confirm">
           ✅ Zapisz przepis
         </Button>

@@ -1,5 +1,6 @@
 // app/_layout.tsx
 import { Stack } from 'expo-router';
+import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import Button from '../components/ui/Button';
 import { useUserStore } from '../stores/userStore';
@@ -32,18 +33,18 @@ export default function Layout() {
         <Stack.Screen name="index" options={{ title: 'Strona główna' }} />
 
         {/* Shopping Lists */}
-        <Stack.Screen name="shopping-lists/index" options={{ title: 'Listy zakupowe' }} />
+        <Stack.Screen
+          name="shopping-lists/index"
+          options={{ title: 'Listy zakupowe' }}
+        />
         <Stack.Screen
           name="shopping-lists/[id]"
-          options={({ params }) => ({ title: params?.id ? `Lista ${params.id}` : 'Lista' })}
+          options={{ title: 'Lista zakupowa' }}
         />
 
         {/* Recipes */}
         <Stack.Screen name="recipes/index" options={{ title: 'Przepisy' }} />
-        <Stack.Screen
-          name="recipes/[id]"
-          options={({ params }) => ({ title: params?.id ? `Przepis ${params.id}` : 'Przepis' })}
-        />
+        <Stack.Screen name="recipes/[id]" options={{ title: 'Przepis' }} />
 
         {/* Expenses */}
         <Stack.Screen name="expenses/index" options={{ title: 'Wydatki' }} />
@@ -52,10 +53,7 @@ export default function Layout() {
 
         {/* Pantries */}
         <Stack.Screen name="pantries/index" options={{ title: 'Spiżarnie' }} />
-        <Stack.Screen
-          name="pantries/[id]"
-          options={({ params }) => ({ title: params?.id ? `Spiżarnia ${params.id}` : 'Spiżarnia' })}
-        />
+        <Stack.Screen name="pantries/[id]" options={{ title: 'Spiżarnia' }} />
 
         {/* Friends */}
         <Stack.Screen name="friends/index" options={{ title: 'Znajomi' }} />
@@ -71,7 +69,6 @@ export default function Layout() {
 }
 
 const styles = StyleSheet.create({
-
   wrapper: {
     flex: 1,
     paddingBottom: 40,

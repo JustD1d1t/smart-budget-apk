@@ -1,44 +1,26 @@
-// components/recipes/IngredientListEditor.tsx
-import { StyleSheet, View } from "react-native";
-import { productsDb } from "../../data/productsDb";
-import { flattenProductsDb } from "../../utils/flattenProductsDb";
-import IngredientFormRow, { Ingredient, IngredientError } from "./IngredientFormRow";
+// components/IngredientList.tsx
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import IngredientFormRow, { Ingredient, IngredientError } from './IngredientFormRow';
 
 interface Props {
     ingredients: Ingredient[];
-    setIngredients: (items: Ingredient[]) => void;
+    onChange: (index: number, updated: Ingredient) => void;
+    onRemove: (index: number) => void;
     errors?: IngredientError[];
 }
 
-export default function IngredientListEditor({
-    ingredients,
-    setIngredients,
-    errors = [],
-}: Props) {
-    const flattenedProducts = flattenProductsDb(productsDb);
-
-    const handleIngredientChange = (index: number, updated: Ingredient) => {
-        const updatedIngredients = [...ingredients];
-        updatedIngredients[index] = updated;
-        setIngredients(updatedIngredients);
-    };
-
-    const handleIngredientRemove = (index: number) => {
-        const filtered = ingredients.filter((_, i) => i !== index);
-        setIngredients(filtered);
-    };
-
+export default function IngredientList({ ingredients, onChange, onRemove, errors = [] }: Props) {
     return (
         <View style={styles.container}>
-            {ingredients.map((ingredient, index) => (
+            {ingredients.map((item, index) => (
                 <IngredientFormRow
-                    key={index}
+                    key={item.name || index}
                     index={index}
-                    ingredient={ingredient}
-                    onChange={handleIngredientChange}
-                    onRemove={handleIngredientRemove}
-                    errors={errors?.[index] ?? {}}
-                    productsDb={flattenedProducts}
+                    ingredient={item}
+                    onChange={onChange}
+                    onRemove={onRemove}
+                    errors={errors[index]}
                 />
             ))}
         </View>
@@ -47,7 +29,7 @@ export default function IngredientListEditor({
 
 const styles = StyleSheet.create({
     container: {
-        gap: 12,
-        paddingVertical: 8,
+        padding: 16,
+        backgroundColor: '#fff',
     },
 });

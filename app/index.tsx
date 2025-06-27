@@ -18,7 +18,7 @@ const routes = [
   { label: 'Wydatki', path: '/expenses' },
   { label: 'Spiżarnie', path: '/pantries' },
   { label: 'Znajomi', path: '/friends' },
-];
+] as const;
 
 export default function Home() {
   const { user, loading } = useUserStore();
@@ -30,7 +30,7 @@ export default function Home() {
     if (mounted && !loading && !user) {
       router.replace('/login');
     }
-  }, [mounted, loading, user]);
+  }, [mounted, loading, user, router]);
 
   if (!mounted || loading || !user) {
     return (

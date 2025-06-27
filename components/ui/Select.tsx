@@ -22,7 +22,7 @@ export default function Select({
     error?: string;
 }) {
     return (
-        <View style={styles.wrapper}>
+        <View>
             {label && <Text style={styles.label}>{label}</Text>}
             <View style={[styles.pickerContainer, error && styles.pickerError]}>
                 <Picker selectedValue={value} onValueChange={(val) => onChange(val)}>

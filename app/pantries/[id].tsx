@@ -171,14 +171,14 @@ export default function PantryDetailsPage() {
       <Modal visible={filtersOpen} animationType='slide' onRequestClose={() => setFiltersOpen(false)}>
         <View style={[styles.modal, styles.gap]}>
           <Select label='Kategoria' value={filterCategory} options={categories.map((c) => ({ value: c, label: c }))} onChange={setFilterCategory} />
-          {!groupedView && <Select label='Sortuj po' value={sortBy} options={sortOptions} onChange={setSortBy} />}
+          {!groupedView && <Select label='Sortuj po' value={sortBy} options={sortOptions} onChange={() => setSortBy} />}
           <Button onPress={() => setGroupedView(!groupedView)} variant='neutral'>
             {groupedView ? 'Pokaż jako listę' : 'Pogrupuj po kategoriach'}
           </Button>
           <Button onPress={() => setFiltersOpen(false)} variant='neutral'>Zamknij</Button>
         </View>
       </Modal>
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      {toast && <Toast message={toast.message} type={toast.type} />}
     </ScrollView>
   );
 }

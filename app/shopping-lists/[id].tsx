@@ -117,6 +117,10 @@ export default function ShoppingListDetailsPage() {
         );
     const categories = Array.from(new Set(items.map(i => i.category)));
 
+    const handleDeleteBought = () => {
+        deleteBoughtItems(id)
+    }
+
     return (
         <ScrollView contentContainerStyle={styles.container}>
             {toastData && <Toast message={toastData.message} type={toastData.type} />}
@@ -164,7 +168,7 @@ export default function ShoppingListDetailsPage() {
             )}
             {filteredItems.length > 0 && (
                 <View style={styles.actions}>
-                    <Button onPress={deleteBoughtItems} variant="danger">
+                    <Button onPress={handleDeleteBought} variant="danger">
                         Usuń kupione
                     </Button>
                     {pantries.length > 0 && (

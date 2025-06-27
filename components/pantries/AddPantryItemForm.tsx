@@ -75,7 +75,7 @@ export default function AddPantryItemForm({ pantryId, onItemAdded }: Props) {
 
     return (
         <View style={styles.container}>
-            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+            {toast && <Toast message={toast.message} type={toast.type} />}
             <ProductAutocomplete
                 value={name}
                 onChange={(val) => handleChange(val)}

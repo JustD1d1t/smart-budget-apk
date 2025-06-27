@@ -6,11 +6,14 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { productsDb } from '../../data/productsDb';
 import { supabase } from '../../lib/supabaseClient';
+import { flattenProductsDb } from '../../utils/flattenProductsDb';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
 import ProductAutocomplete from './ProductAutocomplete';
 
+const flatProducts = flattenProductsDb(productsDb);
 interface Props {
   listId: string;
   onItemAdded?: (item: any) => void;

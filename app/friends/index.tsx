@@ -69,7 +69,7 @@ export default function FriendsPage() {
         <ScrollView contentContainerStyle={styles.container}>
             <Text style={styles.header}>👤 Znajomi</Text>
 
-            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+            {toast && <Toast message={toast.message} type={toast.type} />}
 
             <View style={styles.formRow}>
                 <View style={styles.inputWrapper}>
@@ -90,8 +90,8 @@ export default function FriendsPage() {
                         <View key={f.id} style={styles.row}>
                             <Text>{f.user_email}</Text>
                             <View style={styles.actionsRow}>
-                                <Button size="sm" onPress={() => onAccept(f.id)}>Akceptuj</Button>
-                                <Button size="sm" variant="danger" onPress={() => onRemove(f.id)}>Usuń</Button>
+                                <Button onPress={() => onAccept(f.id)}>Akceptuj</Button>
+                                <Button variant="danger" onPress={() => onRemove(f.id)}>Usuń</Button>
                             </View>
                         </View>
                     ))}
@@ -104,7 +104,7 @@ export default function FriendsPage() {
                     {sent.map(f => (
                         <View key={f.id} style={styles.row}>
                             <Text>{f.user_email}</Text>
-                            <Button size="sm" variant="ghost" onPress={() => onRemove(f.id)}>Usuń</Button>
+                            <Button variant="neutral" onPress={() => onRemove(f.id)}>Usuń</Button>
                         </View>
                     ))}
                 </View>
@@ -118,7 +118,7 @@ export default function FriendsPage() {
                     accepted.map(f => (
                         <View key={f.id} style={styles.row}>
                             <Text>{f.user_email}</Text>
-                            <Button size="sm" variant="ghost" onPress={() => onRemove(f.id)}>Usuń</Button>
+                            <Button variant="neutral" onPress={() => onRemove(f.id)}>Usuń</Button>
                         </View>
                     ))
                 )}

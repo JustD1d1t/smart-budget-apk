@@ -1,6 +1,11 @@
 import { create } from "zustand";
 import { supabase } from "../lib/supabaseClient";
 
+export interface Member {
+  id: string;
+  email: string;
+}
+
 export type Expense = {
   id: string;
   amount: number;
@@ -28,7 +33,10 @@ interface ExpensesStore {
     updatedData: Omit<Expense, "id" | "user_id">,
     sharedWith: Member[]
   ) => Promise<{ success: boolean; error?: string }>;
-  deleteExpense: (id: string, userId: string) => Promise<{success: boolean, error?: string}>;
+  deleteExpense: (
+    id: string,
+    userId: string
+  ) => Promise<{ success: boolean; error?: string }>;
   setExpenses: (expenses: Expense[]) => void;
 }
 

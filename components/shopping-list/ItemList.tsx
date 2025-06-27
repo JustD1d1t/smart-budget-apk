@@ -1,5 +1,13 @@
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
-import { ShoppingItem } from "../../types";
+interface ShoppingItem {
+    id: string;
+    name: string;
+    category: string;
+    quantity: number;
+    unit: string;
+    bought: boolean;
+    recipe?: string;
+}
 
 interface Props {
     items: ShoppingItem[];

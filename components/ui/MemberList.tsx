@@ -42,7 +42,7 @@ export default function MemberList({ isOwner, members = [], onAddFriend, onRemov
                             <View style={styles.memberRow}>
                                 <Text style={styles.email}>{item.email}</Text>
                                 {onAddFriend && isOwner && (
-                                    <Button size="sm" variant="confirm" onPress={() => onAddFriend(item.email)}>
+                                    <Button variant="confirm" onPress={() => onAddFriend(item.email)}>
                                         Dodaj
                                     </Button>
                                 )}
@@ -65,7 +65,7 @@ export default function MemberList({ isOwner, members = [], onAddFriend, onRemov
                         <View style={styles.memberRow}>
                             <Text style={styles.email}>{item.email}</Text>
                             {onRemoveFriend && isOwner && (
-                                <Button size="sm" variant="danger" onPress={() => onRemoveFriend(item.email)}>
+                                <Button variant="danger" onPress={() => onRemoveFriend(item.email)}>
                                     Usuń
                                 </Button>
                             )}

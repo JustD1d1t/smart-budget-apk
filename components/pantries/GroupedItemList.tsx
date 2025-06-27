@@ -7,7 +7,13 @@ import {
     TouchableOpacity,
     View
 } from "react-native";
-import { Item } from "../../types"; // lub wpisz ręcznie typ
+export interface Item {
+    id: string;
+    name: string;
+    category: string;
+    quantity: number;
+    unit: string;
+}
 
 type Props = {
     items: Item[];

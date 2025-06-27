@@ -1,6 +1,11 @@
 import { create } from "zustand";
 import { supabase } from "../lib/supabaseClient";
 
+export interface Member {
+  id: string;
+  email: string;
+}
+
 export interface ShoppingList {
   id: string;
   name: string;
@@ -20,6 +25,8 @@ export interface ShoppingListItem {
   name: string;
   quantity: number;
   unit: string;
+  category: string;
+  bought: boolean;
 }
 
 interface ShoppingListStore {

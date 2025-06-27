@@ -1,11 +1,6 @@
 import { useRouter } from "expo-router";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-
-interface ShoppingList {
-  id: string;
-  name: string;
-  isOwner: boolean;
-}
+import type { ShoppingList } from "../../stores/shoppingListStore";
 
 interface Props {
   list: ShoppingList;

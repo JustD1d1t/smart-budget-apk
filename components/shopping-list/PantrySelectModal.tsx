@@ -16,6 +16,7 @@ interface Props {
     isOpen: boolean;
     onClose: () => void;
     onSelect: (pantryId: string) => void;
+    pantries: Pantry[]
 }
 
 export default function PantrySelectModal({ isOpen, onClose, onSelect }: Props) {

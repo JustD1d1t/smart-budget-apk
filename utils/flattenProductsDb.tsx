@@ -3,8 +3,12 @@ type Product = {
     category: string;
 };
 
-export const flattenProductsDb = (db: Record<string, string[]>): Product[] => {
+export const flattenProductsDb = (
+    db: Record<string, (string | undefined)[]>
+): Product[] => {
     return Object.entries(db).flatMap(([category, items]) =>
-        items.map((name) => ({ name, category }))
+        items
+            .filter((name): name is string => typeof name === "string")
+            .map((name) => ({ name, category }))
     );
 };
