@@ -43,20 +43,6 @@ export default function PantryListPage() {
         showToast("Spiżarnia dodana pomyślnie!", "success");
     };
 
-    const handleRemovePantry = async (id: string) => {
-        await removePantry(id);
-        showToast("Usunięto spiżarnię", "success");
-    };
-
-    const handleRenamePantry = async (id: string, newName: string) => {
-        if (!newName.trim()) {
-            showToast("Nazwa nie może być pusta.", "error");
-            return;
-        }
-        await renamePantry(id, newName.trim());
-        showToast("Zmieniono nazwę spiżarni", "success");
-    };
-
     return (
         <View style={styles.container}>
             <Text style={styles.title}>📦 Twoje spiżarnie</Text>

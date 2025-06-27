@@ -70,7 +70,7 @@ export default function EditExpensePage() {
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
-            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+            {toast && <Toast message={toast.message} type={toast.type} />}
 
             <Text style={styles.title}>✏️ Edytuj wydatek</Text>
 

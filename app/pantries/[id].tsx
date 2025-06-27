@@ -2,13 +2,12 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Modal,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import AddPantryItemForm from "../../components/pantries/AddPantryItemForm";
 import EditPantryItemModal from "../../components/pantries/EditPantryItemModal";
@@ -18,10 +17,7 @@ import Button from '../../components/ui/Button';
 import MemberList from '../../components/ui/MemberList';
 import Select from "../../components/ui/Select";
 import Toast from "../../components/ui/Toast";
-import { supabase } from '../../lib/supabaseClient';
 import { usePantriesStore } from "../../stores/pantriesStore";
-
-type Viewer = { id: string; email: string; role: 'owner' | 'member' };
 
 const sortOptions = [
   { label: 'nazwa', value: 'name' },
@@ -41,50 +37,42 @@ export default function PantryDetailsPage() {
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const [members, setMembers] = useState<Viewer[]>([]);
 
   const {
     selectedPantry,
     pantryItems,
     loading,
     isOwner,
+    members,
     fetchPantryDetails,
     fetchPantryItems,
     updatePantryItem,
     deletePantryItem,
     updateItemQuantity,
+    fetchPantries,
     addMember,
     removeMember,
+    removePantry,
+    fetchMembers,
   } = usePantriesStore();
 
   useEffect(() => {
     if (id) {
       fetchPantryDetails(id);
       fetchPantryItems(id);
-      fetchMembers();
+      fetchMembers(id);
     }
   }, [id]);
-
-  const fetchMembers = async () => {
-    const { data, error } = await supabase
-      .from('pantry_members')
-      .select('id, email, role')
-      .eq('pantry_id', id);
-    if (error) {
-      Alert.alert('Błąd', 'Nie udało się pobrać współtwórców');
-    } else if (data) {
-      setMembers(data.map((m) => ({ id: m.id, email: m.email, role: m.role })));
-    }
-  };
 
   // Delete pantry
   const handleDeletePantry = async () => {
     if (!id) return;
-    const { error } = await supabase.from('pantries').delete().eq('id', id);
+    const { success, error } = await removePantry(id);
     if (error) {
       setToast({ message: 'Błąd usuwania spiżarni', type: 'error' });
     } else {
       setToast({ message: 'Spiżarnia usunięta', type: 'success' });
+      await fetchPantries();
       router.replace('..');
     }
   };
@@ -98,14 +86,14 @@ export default function PantryDetailsPage() {
     if (!id) return;
     const { success, error } = await addMember(id, email);
     setToast({ message: success ? 'Dodano współtwórcę' : error!, type: success ? 'success' : 'error' });
-    if (success) fetchMembers();
+    if (success) fetchMembers(id);
   };
 
   const handleRemoveMember = async (email: string) => {
     if (!id) return;
     const { success, error } = await removeMember(id, email);
     setToast({ message: success ? 'Usunięto współtwórcę' : error!, type: success ? 'success' : 'error' });
-    if (success) fetchMembers();
+    if (success) fetchMembers(id);
   };
 
   const handleSaveEdit = async () => {
@@ -156,7 +144,6 @@ export default function PantryDetailsPage() {
           </TouchableOpacity>
         </View>
       </View>
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       {loading ? (
         <ActivityIndicator style={styles.loader} />
       ) : filteredItems.length === 0 ? (
@@ -191,6 +178,7 @@ export default function PantryDetailsPage() {
           <Button onPress={() => setFiltersOpen(false)} variant='neutral'>Zamknij</Button>
         </View>
       </Modal>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </ScrollView>
   );
 }

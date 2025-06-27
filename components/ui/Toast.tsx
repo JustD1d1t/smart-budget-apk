@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
         right: 20,
         padding: 12,
         borderRadius: 8,
-        zIndex: 1000,
+        zIndex: 9999999999,
     },
     text: {
         color: '#fff',

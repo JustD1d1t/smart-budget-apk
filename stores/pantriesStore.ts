@@ -8,6 +8,11 @@ export interface Pantry {
   owner_id: string;
   isOwner?: boolean;
 }
+export interface Viewer {
+  id: string;
+  email: string;
+  role: "owner" | "member";
+}
 
 export interface PantryItem {
   id: string;
@@ -25,6 +30,7 @@ interface PantriesStore {
   selectedPantry: Pantry | null;
   isOwner: boolean;
   loading: boolean;
+  members: Viewer[];
   fetchPantries: () => Promise<{ success: boolean; error?: string }>;
   fetchPantryDetails: (
     pantryId: string
@@ -59,6 +65,9 @@ interface PantriesStore {
     pantryId: string,
     friendEmail: string
   ) => Promise<{ success: boolean; error?: string }>;
+  fetchMembers: (
+    pantryId: string
+  ) => Promise<{ success: boolean; error?: string }>;
 }
 
 export const usePantriesStore = create<PantriesStore>((set, get) => ({
@@ -67,6 +76,26 @@ export const usePantriesStore = create<PantriesStore>((set, get) => ({
   selectedPantry: null,
   isOwner: false,
   loading: false,
+  members: [],
+  fetchMembers: async (pantryId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("pantry_members")
+        .select("id, email, role")
+        .eq("pantry_id", pantryId);
+
+      if (error) throw error;
+
+      set({
+        members: data || [],
+      });
+
+      return { success: true };
+    } catch (e: any) {
+      const message = e.message || "Nie udało się pobrać współtwórców";
+      return { success: false, error: message };
+    }
+  },
   addMember: async (pantryId, friendEmail) => {
     try {
       // 1. find user id
