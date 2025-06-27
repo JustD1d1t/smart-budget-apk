@@ -7,15 +7,7 @@ import {
     View
 } from "react-native";
 import Collapsible from "react-native-collapsible";
-
-interface ShoppingItem {
-    id: string;
-    name: string;
-    category: string;
-    quantity: number;
-    unit: string;
-    bought: boolean;
-}
+import type { ShoppingItem } from "../../stores/shoppingListStore";
 
 interface Props {
     items: ShoppingItem[];

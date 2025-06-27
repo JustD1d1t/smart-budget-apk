@@ -5,20 +5,8 @@ import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from "react
 import Button from "../../components/ui/Button";
 import ShoppingListSelectModal from "../../components/ui/ShoppingListSelectModal";
 import { supabase } from "../../lib/supabaseClient";
+import type { Recipe } from "../../stores/recipesStore";
 import { useUserStore } from "../../stores/userStore";
-
-interface Ingredient {
-  name: string;
-  quantity: number;
-  unit: string;
-}
-
-interface Recipe {
-  id: string;
-  name: string;
-  description?: string;
-  ingredients: Ingredient[];
-}
 
 export default function RecipesListPage() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);

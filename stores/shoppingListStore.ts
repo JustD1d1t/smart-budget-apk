@@ -12,6 +12,15 @@ export interface ShoppingList {
   owner_id: string;
   isOwner?: boolean;
 }
+export interface ShoppingItem {
+  id: string;
+  name: string;
+  category: string;
+  quantity: number;
+  unit: string;
+  bought: boolean;
+  recipe?: string;
+}
 
 export interface Viewer {
   id: string;

@@ -1,13 +1,6 @@
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
-interface ShoppingItem {
-    id: string;
-    name: string;
-    category: string;
-    quantity: number;
-    unit: string;
-    bought: boolean;
-    recipe?: string;
-}
+import type { ShoppingItem } from "../../stores/shoppingListStore";
+
 
 interface Props {
     items: ShoppingItem[];

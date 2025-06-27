@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { useFriendsStore } from '../../stores/friendsStore';
 import Button from './Button';
@@ -17,7 +17,6 @@ interface Props {
 
 export default function MemberList({ isOwner, members = [], onAddFriend, onRemoveFriend }: Props) {
     const { friends, fetchFriends } = useFriendsStore();
-    const [expanded, setExpanded] = useState(false);
 
     useEffect(() => {
         fetchFriends();

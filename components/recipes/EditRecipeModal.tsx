@@ -14,19 +14,7 @@ import Input from "../../components/ui/Input";
 import Textarea from "../../components/ui/Textarea";
 import Toast from "../../components/ui/Toast";
 import { supabase } from "../../lib/supabaseClient";
-
-interface Ingredient {
-  name: string;
-  quantity: number;
-  unit: string;
-}
-
-interface Recipe {
-  id: string;
-  name: string;
-  description?: string;
-  ingredients: Ingredient[];
-}
+import type { Ingredient, Recipe } from "../../stores/recipesStore";
 
 type IngredientError = {
   name?: string;

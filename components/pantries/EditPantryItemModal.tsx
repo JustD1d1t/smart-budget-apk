@@ -8,15 +8,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-
-interface PantryItem {
-    id: string;
-    name: string;
-    category: string;
-    quantity: number;
-    unit: string;
-    expiry_date?: string | null;
-}
+import type { PantryItem } from "../../stores/pantriesStore";
 
 const CATEGORIES = ["żywność", "chemia", "napoje", "mrożonki", "inne"];
 const UNITS = ["szt", "kg"];

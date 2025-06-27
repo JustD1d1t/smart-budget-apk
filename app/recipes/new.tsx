@@ -9,23 +9,7 @@ import Textarea from "../../components/ui/Textarea";
 import { supabase } from "../../lib/supabaseClient";
 import { useUserStore } from "../../stores/userStore";
 
-interface Ingredient {
-  name: string;
-  quantity: number;
-  unit: string;
-}
-
-type IngredientError = {
-  name?: string;
-  quantity?: string;
-  unit?: string;
-};
-type FormErrors = {
-  name?: string;
-  description?: string;
-  ingredients?: string;
-  ingredientFields: IngredientError[];
-};
+import type { FormErrors, Ingredient, IngredientError } from "../../stores/recipesStore";
 
 export default function NewRecipePage() {
   const { user } = useUserStore();
