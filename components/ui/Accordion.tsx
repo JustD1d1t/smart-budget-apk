@@ -16,7 +16,8 @@ export default function Accordion({
         <View style={styles.container}>
             <TouchableOpacity onPress={() => setOpen(!open)} style={styles.header}>
                 <Text style={styles.title}>{title}</Text>
-                <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={20} color="#333" />
+                <Ionicons
+                    testID="accordion-icon" name={open ? 'chevron-up' : 'chevron-down'} size={20} color="#333" />
             </TouchableOpacity>
             {open && <View style={styles.content}>{children}</View>}
         </View>

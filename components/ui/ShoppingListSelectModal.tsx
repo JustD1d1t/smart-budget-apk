@@ -53,7 +53,10 @@ export default function ShoppingListSelectModal({
                     <Text style={styles.title}>Wybierz listę zakupową</Text>
 
                     {loading ? (
-                        <ActivityIndicator size="large" />
+                        <ActivityIndicator
+                            testID="shoppinglist-loading"
+                            size="large"
+                        />
                     ) : lists.length === 0 ? (
                         <Text style={styles.info}>Brak dostępnych list.</Text>
                     ) : (
@@ -67,7 +70,9 @@ export default function ShoppingListSelectModal({
                                         onClose();
                                     }}
                                 >
-                                    <Text style={styles.listText}>{list.name}</Text>
+                                    <Text style={styles.listText}>
+                                        {list.name}
+                                    </Text>
                                 </Pressable>
                             ))}
                         </ScrollView>

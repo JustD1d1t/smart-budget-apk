@@ -51,6 +51,7 @@ export default function EditItemModal({ item, onChange, onClose, onSave }: Props
             />
             <View style={[styles.pickerWrapper, styles.flex]}>
               <Picker
+                testID="unit-picker"
                 selectedValue={item.unit}
                 onValueChange={(val) => onChange({ ...item, unit: val })}
               >

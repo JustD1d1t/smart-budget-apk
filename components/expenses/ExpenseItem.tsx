@@ -4,8 +4,6 @@ import { Expense } from '../../stores/expensesStore';
 interface Props {
     expense: Expense;
     onPress?: () => void;
-    onEdit?: () => void;
-    onDelete?: () => void;
 }
 
 export default function ExpenseItem({

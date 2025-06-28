@@ -13,7 +13,7 @@ export default function Modal({
     title?: string;
 }) {
     return (
-        <RNModal visible={visible} animationType="fade" transparent>
+        <RNModal testID="modal-root" visible={visible} animationType="fade" transparent>
             <View
                 style={{
                     flex: 1,
@@ -35,7 +35,7 @@ export default function Modal({
                         </Text>
                     )}
                     {children}
-                    <TouchableOpacity onPress={onClose} style={{ marginTop: 12 }}>
+                    <TouchableOpacity testID="modal-close-button" onPress={onClose} style={{ marginTop: 12 }}>
                         <Text style={{ textAlign: 'right', color: '#3498db' }}>Zamknij</Text>
                     </TouchableOpacity>
                 </View>

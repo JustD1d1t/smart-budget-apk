@@ -1,4 +1,3 @@
-// app/recipes/[id].tsx
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -28,21 +27,17 @@ export default function EditRecipePage() {
 
   const [loading, setLoading] = useState(true);
   const [recipe, setRecipe] = useState<Recipe | null>(null);
-
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [ingredientErrors, setIngredientErrors] = useState<IngredientError[]>([]);
-
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
-  // Helper to show and auto-dismiss toast
   const showToast = (message: string, type: "success" | "error") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
 
-  // Fetch recipe once
   useEffect(() => {
     if (!id) return;
     (async () => {
@@ -66,7 +61,6 @@ export default function EditRecipePage() {
     })();
   }, [id]);
 
-  // Validate before submit
   const validate = () => {
     let ok = true;
     const errs: IngredientError[] = ingredients.map(() => ({}));
@@ -97,7 +91,6 @@ export default function EditRecipePage() {
     return ok;
   };
 
-  // Submit updates recipe
   const handleSubmit = async () => {
     if (!validate() || !id) return;
     const payload = { name: name.trim(), description: description.trim(), ingredients };
@@ -113,7 +106,7 @@ export default function EditRecipePage() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator testID="loading-indicator" size="large" />
       </View>
     );
   }
@@ -121,17 +114,20 @@ export default function EditRecipePage() {
   if (!recipe) {
     return (
       <View style={styles.center}>
-        <Text style={styles.empty}>Nie znaleziono przepisu.</Text>
-        <Button onPress={() => router.back()}>⬅️ Wróć</Button>
+        <Text testID="error-text">{toast?.message || "Nie znaleziono przepisu."}</Text>
+        <Button testID="back-button" onPress={() => router.back()}>
+          ⬅️ Wróć
+        </Button>
       </View>
     );
   }
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {toast && <Toast message={toast.message} type={toast.type} />}
+      {toast && <Toast testID="toast-message" message={toast.message} type={toast.type} />}
 
       <Input
+        testID="name-input"
         label="Nazwa przepisu"
         value={name}
         onChangeText={setName}
@@ -139,6 +135,7 @@ export default function EditRecipePage() {
       />
 
       <Textarea
+        testID="description-input"
         label="Opis"
         placeholder="Opis (min. 50 znaków)"
         value={description}
@@ -161,18 +158,16 @@ export default function EditRecipePage() {
           setIngredientErrors(ingredientErrors.filter((_, i) => i !== idx));
         }}
       />
-      <Button onPress={() => {
+      <Button testID="add-ingredient-button" onPress={() => {
         setIngredients([...ingredients, { name: "", quantity: 1, unit: "" }]);
         setIngredientErrors([...ingredientErrors, {}]);
       }}>
         ➕ Dodaj składnik
       </Button>
 
-      <View>
-        <Button onPress={handleSubmit} variant="confirm">
-          ✅ Zapisz przepis
-        </Button>
-      </View>
+      <Button testID="save-button" onPress={handleSubmit} variant="confirm">
+        ✅ Zapisz przepis
+      </Button>
     </ScrollView>
   );
 }
@@ -187,10 +182,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 16,
-  },
-  empty: {
-    fontSize: 16,
-    color: "#6b7280",
   },
   sectionTitle: {
     fontSize: 18,

@@ -40,6 +40,7 @@ export default function EditPantryItemModal({
                     />
 
                     <Picker
+                        testID="picker-category"
                         selectedValue={item.category}
                         onValueChange={(value) => onChange({ ...item, category: value })}
                         style={styles.picker}
@@ -61,6 +62,7 @@ export default function EditPantryItemModal({
                             style={[styles.input, styles.flex]}
                         />
                         <Picker
+                            testID="picker-unit"
                             selectedValue={item.unit}
                             onValueChange={(value) => onChange({ ...item, unit: value })}
                             style={[styles.picker, styles.flex]}

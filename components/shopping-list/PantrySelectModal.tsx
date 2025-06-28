@@ -43,7 +43,7 @@ export default function PantrySelectModal({ isOpen, onClose, onSelect }: Props) 
                     <Text style={styles.title}>Wybierz spiżarnię</Text>
 
                     {loading ? (
-                        <ActivityIndicator size="large" />
+                        <ActivityIndicator testID="loading-indicator" size="large" />
                     ) : (
                         <ScrollView contentContainerStyle={styles.list}>
                             {pantries.map((pantry) => (

@@ -26,6 +26,7 @@ export default function Button({
 }: ButtonProps) {
     return (
         <TouchableOpacity
+            testID="button-root"
             onPress={onPress}
             disabled={disabled}
             style={[

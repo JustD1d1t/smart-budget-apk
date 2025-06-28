@@ -1,4 +1,3 @@
-// components/IngredientList.tsx
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import IngredientFormRow, { Ingredient, IngredientError } from './IngredientFormRow';
@@ -10,7 +9,7 @@ interface Props {
     errors?: IngredientError[];
 }
 
-export default function IngredientList({ ingredients, onChange, onRemove, errors = [] }: Props) {
+export default function IngredientListEditor({ ingredients, onChange, onRemove, errors = [] }: Props) {
     return (
         <View style={styles.container}>
             {ingredients.map((item, index) => (

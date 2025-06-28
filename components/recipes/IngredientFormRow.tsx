@@ -37,15 +37,12 @@ export default function IngredientFormRow({
     };
 
     return (
-        <View style={styles.outerContainer}>
-
+        <View style={styles.outerContainer} testID={`ingredient-row-${index}`}>
             <View style={styles.container}>
-
-
                 <View>
-
-                    <View >
+                    <View>
                         <ProductAutocomplete
+                            testID="product-autocomplete"
                             value={ingredient.name}
                             onChange={(val) => handleChange("name", val)}
                             onClick={(val) => handleChange("name", val)}
@@ -55,7 +52,8 @@ export default function IngredientFormRow({
                     <View style={styles.rowBottom}>
                         <View style={styles.quantityWrapper}>
                             <Input
-                                value={ingredient.quantity?.toString()}
+                                testID="quantity-input"
+                                value={ingredient.quantity.toString()}
                                 onChangeText={(text) => handleChange("quantity", Number(text))}
                                 placeholder="Ilość"
                                 keyboardType="numeric"
@@ -64,6 +62,7 @@ export default function IngredientFormRow({
                         </View>
                         <View style={styles.unitWrapper}>
                             <Select
+                                testID="unit-select"
                                 value={ingredient.unit}
                                 options={UNITS.map(u => ({ label: u, value: u }))}
                                 placeholder="Jednostka"
@@ -74,9 +73,12 @@ export default function IngredientFormRow({
                     </View>
                 </View>
             </View>
-
             <View>
-                <TouchableOpacity onPress={() => onRemove(index)} style={styles.removeButton}>
+                <TouchableOpacity
+                    testID="remove-button"
+                    onPress={() => onRemove(index)}
+                    style={styles.removeButton}
+                >
                     <Text style={styles.removeText}>🗑️</Text>
                 </TouchableOpacity>
             </View>
@@ -94,11 +96,6 @@ const styles = StyleSheet.create({
         display: 'flex',
         flexWrap: 'nowrap',
         flexGrow: 1,
-    },
-    fullInput: {
-        flex: 1,
-        marginRight: 12,
-        width: '100%',
     },
     removeButton: {
         padding: 8,

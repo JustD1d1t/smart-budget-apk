@@ -1,3 +1,5 @@
+// components/ui/Select.tsx
+
 import { Picker } from '@react-native-picker/picker';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -22,20 +24,21 @@ export default function Select({
     error?: string;
 }) {
     return (
-        <View>
+        <View testID="select-container">
             {label && <Text style={styles.label}>{label}</Text>}
-            <View style={[styles.pickerContainer, error && styles.pickerError]}>
-                <Picker selectedValue={value} onValueChange={(val) => onChange(val)}>
-                    <Picker.Item
-                        label={placeholder}
-                        value=""
-                        enabled={false}
-                    />
-                    {options.map((opt) => (
+
+            <View
+                testID="select-picker-container"
+                style={[styles.pickerContainer, error && styles.pickerError]}
+            >
+                <Picker selectedValue={value} onValueChange={val => onChange(val)}>
+                    <Picker.Item label={placeholder} value="" enabled={false} />
+                    {options.map(opt => (
                         <Picker.Item key={opt.value} label={opt.label} value={opt.value} />
                     ))}
                 </Picker>
             </View>
+
             {error && <Text style={styles.errorText}>{error}</Text>}
         </View>
     );

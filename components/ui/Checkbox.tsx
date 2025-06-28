@@ -1,3 +1,4 @@
+// components/ui/Checkbox.tsx
 import { Pressable, Text, View } from 'react-native';
 
 export default function Checkbox({
@@ -11,10 +12,12 @@ export default function Checkbox({
 }) {
   return (
     <Pressable
+      testID="checkbox-pressable"
       onPress={() => onChange(!checked)}
       style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}
     >
       <View
+        testID="checkbox-box"
         style={{
           width: 20,
           height: 20,

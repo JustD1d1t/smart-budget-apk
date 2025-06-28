@@ -9,6 +9,7 @@ export default function Textarea({
         <View style={{ marginBottom: 12 }}>
             {label && <Text style={{ marginBottom: 4, fontWeight: '500' }}>{label}</Text>}
             <TextInput
+                testID="textarea-input"
                 {...props}
                 multiline
                 numberOfLines={4}

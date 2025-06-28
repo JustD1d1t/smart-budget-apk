@@ -1,4 +1,6 @@
-import { useEffect, useRef } from 'react';
+// components/ui/Toast.tsx
+
+import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, useWindowDimensions } from 'react-native';
 
 export default function Toast({
@@ -16,10 +18,11 @@ export default function Toast({
             toValue: 0,
             useNativeDriver: true,
         }).start();
-    }, []);
+    }, [translateY]);
 
     return (
         <Animated.View
+            testID="toast-root"
             style={[
                 styles.toast,
                 {
@@ -29,14 +32,16 @@ export default function Toast({
                 },
             ]}
         >
-            <Text style={styles.text}>{message}</Text>
+            <Text testID="toast-text" style={styles.text}>
+                {message}
+            </Text>
         </Animated.View>
     );
 }
 
 const styles = StyleSheet.create({
     toast: {
-        position: 'fixed',
+        position: 'absolute',
         bottom: 20,
         left: 20,
         right: 20,
