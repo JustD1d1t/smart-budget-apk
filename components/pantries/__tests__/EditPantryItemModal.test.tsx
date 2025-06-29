@@ -36,10 +36,6 @@ describe('EditPantryItemModal', () => {
     const mockOnSave = jest.fn();
     const mockOnClose = jest.fn();
 
-    beforeEach(() => {
-        jest.clearAllMocks();
-    });
-
     it('renders correctly with initial values', () => {
         render(
             <EditPantryItemModal
@@ -50,19 +46,31 @@ describe('EditPantryItemModal', () => {
             />
         );
 
-        // Check TextInputs
         expect(screen.getByPlaceholderText('Nazwa produktu').props.value).toBe('Mleko');
         expect(screen.getByPlaceholderText('Ilość').props.value).toBe('2');
         expect(screen.getByPlaceholderText('Data przydatności (YYYY-MM-DD)').props.value).toBe('2025-12-31');
 
-        // Pickers should render
         expect(screen.getByTestId('picker-category')).toBeTruthy();
         expect(screen.getByTestId('picker-unit')).toBeTruthy();
 
-        // Buttons
         expect(screen.getByText('Anuluj')).toBeTruthy();
         expect(screen.getByText('💾 Zapisz')).toBeTruthy();
     });
+
+    it('renders empty expiry date when expiry_date is null', () => {
+        const itemWithNoExpiry = { ...initialItem, expiry_date: null };
+        render(
+            <EditPantryItemModal
+                item={itemWithNoExpiry}
+                onChange={mockOnChange}
+                onSave={mockOnSave}
+                onClose={mockOnClose}
+            />
+        );
+        expect(screen.getByPlaceholderText('Data przydatności (YYYY-MM-DD)').props.value).toBe('');
+    });
+
+    beforeEach(() => jest.clearAllMocks());
 
     it('calls onChange when name changes', () => {
         render(
@@ -91,6 +99,20 @@ describe('EditPantryItemModal', () => {
         expect(mockOnChange).toHaveBeenCalledWith({ ...initialItem, category: 'chemia' });
     });
 
+    it('calls onChange when category is cleared', () => {
+        render(
+            <EditPantryItemModal
+                item={initialItem}
+                onChange={mockOnChange}
+                onSave={mockOnSave}
+                onClose={mockOnClose}
+            />
+        );
+        const categoryPicker = screen.getByTestId('picker-category');
+        fireEvent(categoryPicker, 'onValueChange', '');
+        expect(mockOnChange).toHaveBeenCalledWith({ ...initialItem, category: '' });
+    });
+
     it('calls onChange when quantity changes', () => {
         render(
             <EditPantryItemModal
@@ -102,6 +124,19 @@ describe('EditPantryItemModal', () => {
         );
         fireEvent.changeText(screen.getByPlaceholderText('Ilość'), '5');
         expect(mockOnChange).toHaveBeenCalledWith({ ...initialItem, quantity: 5 });
+    });
+
+    it('sets quantity to 0 when non-numeric input is provided', () => {
+        render(
+            <EditPantryItemModal
+                item={initialItem}
+                onChange={mockOnChange}
+                onSave={mockOnSave}
+                onClose={mockOnClose}
+            />
+        );
+        fireEvent.changeText(screen.getByPlaceholderText('Ilość'), 'abc');
+        expect(mockOnChange).toHaveBeenCalledWith({ ...initialItem, quantity: 0 });
     });
 
     it('calls onChange when unit changes', () => {
@@ -118,7 +153,21 @@ describe('EditPantryItemModal', () => {
         expect(mockOnChange).toHaveBeenCalledWith({ ...initialItem, unit: 'kg' });
     });
 
-    it('calls onChange when expiry date changes', () => {
+    it('calls onChange when unit is cleared', () => {
+        render(
+            <EditPantryItemModal
+                item={initialItem}
+                onChange={mockOnChange}
+                onSave={mockOnSave}
+                onClose={mockOnClose}
+            />
+        );
+        const unitPicker = screen.getByTestId('picker-unit');
+        fireEvent(unitPicker, 'onValueChange', '');
+        expect(mockOnChange).toHaveBeenCalledWith({ ...initialItem, unit: '' });
+    });
+
+    it('calls onChange when expiry date changes to empty string', () => {
         render(
             <EditPantryItemModal
                 item={initialItem}
@@ -132,6 +181,22 @@ describe('EditPantryItemModal', () => {
             ''
         );
         expect(mockOnChange).toHaveBeenCalledWith({ ...initialItem, expiry_date: null });
+    });
+
+    it('calls onChange when expiry date changes to new date', () => {
+        render(
+            <EditPantryItemModal
+                item={initialItem}
+                onChange={mockOnChange}
+                onSave={mockOnSave}
+                onClose={mockOnClose}
+            />
+        );
+        fireEvent.changeText(
+            screen.getByPlaceholderText('Data przydatności (YYYY-MM-DD)'),
+            '2026-01-01'
+        );
+        expect(mockOnChange).toHaveBeenCalledWith({ ...initialItem, expiry_date: '2026-01-01' });
     });
 
     it('calls onClose when cancel button is pressed', () => {
