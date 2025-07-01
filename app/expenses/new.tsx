@@ -1,3 +1,4 @@
+// app/(pages)/expenses/New.tsx
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { ScrollView, StyleSheet, Text } from "react-native";
@@ -23,7 +24,8 @@ export default function ExpensesNewPage() {
     const { addExpense } = useExpensesStore();
     const router = useRouter();
 
-    const [amount, setAmount] = useState(0);
+    // Przechowujemy jako string z dwoma miejscami po przecinku
+    const [amount, setAmount] = useState("");
     const [store, setStore] = useState("");
     const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
     const [category, setCategory] = useState("");
@@ -37,7 +39,8 @@ export default function ExpensesNewPage() {
 
     const validateForm = (): boolean => {
         const errs: FormErrors = {};
-        if (amount <= 0) errs.amount = "Kwota musi być większa od zera.";
+        const num = parseFloat(amount);
+        if (isNaN(num) || num <= 0) errs.amount = "Kwota musi być większa od zera.";
         if (!store.trim()) errs.store = "Sklep nie może być pusty.";
         if (new Date(date) > new Date()) errs.date = "Data nie może być z przyszłości.";
         if (!category) errs.category = "Wybierz kategorię.";
@@ -47,8 +50,9 @@ export default function ExpensesNewPage() {
 
     const handleAdd = async () => {
         if (!validateForm() || !user?.id) return;
+        const num = parseFloat(amount);
         const result = await addExpense(
-            { amount, store: store.trim(), date, category, user_id: user.id }
+            { amount: num, store: store.trim(), date, category, user_id: user.id }
         );
         if (!result.success) {
             showToast(result.error || "Błąd zapisu wydatku.", 'error');
@@ -65,9 +69,9 @@ export default function ExpensesNewPage() {
 
             <Input
                 label="Kwota (zł)"
-                keyboardType="numeric"
-                value={amount.toString()}
-                onChangeText={(text) => setAmount(Number(text))}
+                type="number"
+                value={amount}
+                onChangeText={setAmount}
                 error={errors.amount}
             />
 
