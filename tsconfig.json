@@ -1,6 +1,9 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
+    // Ustawiamy transformację JSX dla React Native / Expo
+    "jsx": "react-jsx",
+    // Twoje istniejące opcje
     "types": [
       "jest",
       "node"
@@ -17,5 +20,13 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "babel.config.js",
+    "metro.config.js",
+    "jest.config.js",
+    "**/*.test.ts",
+    "**/*.test.tsx"
   ]
 }
