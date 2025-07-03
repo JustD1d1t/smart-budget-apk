@@ -2,6 +2,7 @@
   "expo": {
     "name": "smart-budget",
     "slug": "smart-budget",
+    "sdkVersion": "53.0.0",
     "version": "1.0.0",
     "orientation": "portrait",
     "platforms": [
@@ -12,7 +13,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "smartbudgetnative",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "description": "",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.justd1d1t.smartbudget",
@@ -22,13 +23,17 @@
       }
     },
     "android": {
+      "newArchEnabled": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.justd1d1t.smartbudget",
-      "versionCode": 1
+      "versionCode": 1,
+      "statusBar": {
+        "backgroundColor": "#ffffff"
+      }
     },
     "web": {
       "bundler": "metro",
