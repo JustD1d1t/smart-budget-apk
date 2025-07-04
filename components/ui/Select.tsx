@@ -1,5 +1,3 @@
-// components/ui/Select.tsx
-
 import { Picker } from '@react-native-picker/picker';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -31,10 +29,20 @@ export default function Select({
                 testID="select-picker-container"
                 style={[styles.pickerContainer, error && styles.pickerError]}
             >
-                <Picker selectedValue={value} onValueChange={val => onChange(val)}>
-                    <Picker.Item label={placeholder} value="" enabled={false} />
+                <Picker
+                    selectedValue={value}
+                    onValueChange={val => onChange(val)}
+                    style={styles.picker}
+                    dropdownIconColor={error ? '#dc2626' : '#000'}
+                >
+                    <Picker.Item label={placeholder} value="" color="#888" enabled={false} />
                     {options.map(opt => (
-                        <Picker.Item key={opt.value} label={opt.label} value={opt.value} />
+                        <Picker.Item
+                            key={opt.value}
+                            label={opt.label}
+                            value={opt.value}
+                            color="#000"
+                        />
                     ))}
                 </Picker>
             </View>
@@ -54,6 +62,9 @@ const styles = StyleSheet.create({
         borderColor: '#ccc',
         borderRadius: 8,
         backgroundColor: '#fff',
+    },
+    picker: {
+        color: '#000', // ensure selected value is visible on white background
     },
     pickerError: {
         borderColor: '#dc2626',
