@@ -1,6 +1,6 @@
 // components/ui/Input.tsx
 import DateTimePicker from '@react-native-community/datetimepicker';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -83,7 +83,7 @@ export default function Input({
   };
 
   return (
-    <View style={styles.wrapper}>
+    <View >
       {label && <Text style={styles.label}>{label}</Text>}
 
       {type === 'date' ? (
@@ -124,13 +124,12 @@ export default function Input({
 }
 
 const styles = StyleSheet.create({
-  wrapper: { marginVertical: 8 },
   label: { marginBottom: 4, fontWeight: '500' },
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 8,
-    padding: 10,
+    padding: 20,
     backgroundColor: '#fff',
     color: '#000',
   },

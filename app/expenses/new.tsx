@@ -99,7 +99,7 @@ export default function ExpensesNewPage() {
                 error={errors.category}
             />
 
-            <Button onPress={handleAdd} variant="confirm">
+            <Button style={styles.button} onPress={handleAdd} variant="confirm">
                 ➕ Dodaj wydatek
             </Button>
         </ScrollView>
@@ -107,6 +107,7 @@ export default function ExpensesNewPage() {
 }
 
 const styles = StyleSheet.create({
-    container: { padding: 16, gap: 8 },
+    container: { padding: 16, gap: 4 },
     title: { fontSize: 20, fontWeight: "bold", marginBottom: 8 },
+    button: { marginTop: 8 }
 });
