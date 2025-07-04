@@ -35,7 +35,7 @@ export default function Select({
                     style={styles.picker}
                     dropdownIconColor={error ? '#dc2626' : '#000'}
                 >
-                    <Picker.Item label={placeholder} value="" color="#888" enabled={false} />
+                    <Picker.Item label={placeholder} value="" enabled={false} />
                     {options.map(opt => (
                         <Picker.Item
                             key={opt.value}
